@@ -4,10 +4,13 @@
 		y: number;
 	}
 
-	export interface IWidget extends ICoordinates {
-		id: number;
+	export interface ISize {
 		w: number;
 		h: number;
+	}
+
+	export interface IWidget extends ICoordinates, ISize {
+		id: number;
 	}
 
 	export interface IFuncs {
@@ -21,11 +24,12 @@
 <script>
 	import { type Snippet } from 'svelte';
 
-	const SNAPP_EASE: string = '100ms';
+	const SNAPP_EASE: string = '200ms ease';
 
 	interface Props {
 		spec: IWidget;
 		moving?: boolean;
+		resizing?: boolean;
 		snappingArea: number;
 		funcs?: IFuncs;
 		children?: Snippet;
@@ -34,6 +38,7 @@
 	let {
 		spec = $bindable(),
 		moving = $bindable(false),
+		resizing = $bindable(false),
 		snappingArea,
 		funcs,
 		children
@@ -45,6 +50,12 @@
 				...fixedCoordinates({ x: spec.x, y: spec.y }),
 				w: spec.w,
 				h: spec.h
+			};
+		} else if (resizing) {
+			return {
+				...fixedSizing({ w: spec.w, h: spec.h }),
+				x: spec.x,
+				y: spec.y
 			};
 		} else {
 			return {
@@ -62,14 +73,14 @@
 	/**
 	 * Round an axis position up to its closest snapping-area.
 	 */
-	const roundUp = (axis: 'x' | 'y'): number =>
-		Math.ceil(spec[axis] / snappingArea) * snappingArea;
+	const roundUp = (prop: 'x' | 'y' | 'w' | 'h'): number =>
+		Math.ceil(spec[prop] / snappingArea) * snappingArea;
 
 	/**
 	 * Round an axis position down to its closest snapping-area.
 	 */
-	const roundDown = (axis: 'x' | 'y'): number =>
-		Math.floor(spec[axis] / snappingArea) * snappingArea;
+	const roundDown = (prop: 'x' | 'y' | 'w' | 'h'): number =>
+		Math.floor(spec[prop] / snappingArea) * snappingArea;
 
 	/**
 	 * Fix the coordinates of the widget to match the snapping-area.
@@ -79,14 +90,19 @@
 		y: coords.y % snappingArea > snappThreshold ? roundUp('y') : roundDown('y')
 	});
 
-	function handleMouseDown(event: MouseEvent) {
+	const fixedSizing = (size: ISize): ISize => ({
+		w: size.w % snappingArea > snappThreshold ? roundUp('w') : roundDown('w'),
+		h: size.h % snappingArea > snappThreshold ? roundUp('h') : roundDown('h')
+	});
+
+	function handleMouseDownMove(event: MouseEvent) {
 		event.preventDefault();
 		moving = true;
 		cursorElemAnchor.x = event.offsetX;
 		cursorElemAnchor.y = event.offsetY;
 	}
 
-	function handleMouseUp(event: MouseEvent): void {
+	function handleMouseUpMove(event: MouseEvent): void {
 		event.preventDefault();
 		moving = false;
 		let fixed = fixedCoordinates({ x: spec.x, y: spec.y });
@@ -94,14 +110,14 @@
 		spec.y = fixed.y;
 	}
 
-	function handleMouseMove(event: MouseEvent): void {
+	function handleMouseMoveMove(event: MouseEvent): void {
 		event.preventDefault();
 		if (!moving) return;
 		spec.x -= cursorElemAnchor.x - event.offsetX;
 		spec.y -= cursorElemAnchor.y - event.offsetY;
 	}
 
-	function handleMouseLeave(event: MouseEvent): void {
+	function handleMouseLeaveMove(event: MouseEvent): void {
 		event.preventDefault();
 		/*
 		 * BUG: Fast movement ending in the cursor leaving the widget-position
@@ -109,54 +125,88 @@
 		 */
 		moving = false;
 	}
+
+	function handleMouseDownResize(event: MouseEvent) {
+		resizing = true;
+	}
+
+	function handleMouseUpResize(event: MouseEvent) {
+		spec.w = snappHint.w;
+		spec.h = snappHint.h;
+		resizing = false;
+	}
 </script>
 
-<div
-	class="snapp-hint ease-snapp"
-	style:width="{snappHint.w}px"
-	style:height="{snappHint.h}px"
-	style="
-		--snapp-hint-x-pos: {snappHint.x}px;
-		--snapp-hint-y-pos: {snappHint.y}px;
-		--transition: transform {SNAPP_EASE};
-	"
-></div>
+{#if moving || resizing}
+	<div
+		class="snapp-hint ease-snapp"
+		style:opacity={moving || resizing ? '0.5' : '1'}
+		style:width="{snappHint.w}px"
+		style:height="{snappHint.h}px"
+		style="
+			--snapp-hint-x-pos: {snappHint.x}px;
+			--snapp-hint-y-pos: {snappHint.y}px;
+			--transition: transform {SNAPP_EASE},
+				width {SNAPP_EASE},
+				height {SNAPP_EASE};
+		"
+	></div>
+{/if}
 
 <div
 	role="none"
-	class="widget"
+	bind:clientWidth={spec.w}
+	bind:clientHeight={spec.h}
+	class="widget-wrapper"
 	class:ease-snapp={!moving}
+	style:opacity={moving || resizing ? '0.5' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
-	style:cursor={moving ? 'grabbing' : 'grab'}
 	style="
 		--x-pos: {spec.x}px;
 		--y-pos: {spec.y}px;
-		--transition: transform {SNAPP_EASE}
+		--transition: transform {SNAPP_EASE};
 	"
-	onmousedown={handleMouseDown}
-	onmouseup={handleMouseUp}
-	onmousemove={handleMouseMove}
-	onmouseleave={handleMouseLeave}
+	onmousedown={handleMouseDownResize}
+	onmouseup={handleMouseUpResize}
 >
-	{@render children?.()}
+	<div
+		role="none"
+		class="widget"
+		style:cursor={moving ? 'grabbing' : 'grab'}
+		onmousedown={handleMouseDownMove}
+		onmouseup={handleMouseUpMove}
+		onmousemove={handleMouseMoveMove}
+		onmouseleave={handleMouseLeaveMove}
+	>
+		{@render children?.()}
+	</div>
 </div>
 
 <style>
-	.widget,
+	.widget-wrapper,
 	.snapp-hint {
 		position: absolute;
 	}
 
-	.widget {
+	.widget-wrapper {
 		transform: translateX(var(--x-pos)) translateY(var(--y-pos));
+		padding: 10px;
 		background-color: white;
+		box-sizing: border-box;
+		overflow: auto;
+		resize: both;
+	}
+
+	.widget {
+		width: 100%;
+		height: 100%;
+		background-color: gray;
 	}
 
 	.snapp-hint {
 		transform: translateX(var(--snapp-hint-x-pos))
 			translateY(var(--snapp-hint-y-pos));
-		opacity: 0.4;
 		background-color: #443443;
 	}
 

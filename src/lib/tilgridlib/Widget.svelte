@@ -4,7 +4,8 @@
 
 	/*
 	 * TODO:
-	 * + Add ability to delete widgets.
+	 * - [ ] Add ability to delete widgets.
+	 *
 	 * + Add ability to add widgets.
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
@@ -133,6 +134,9 @@
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
+
+				// Runs when the operation is complete.
+				funcs?.move?.({ id: spec.id });
 			},
 			handleMouseMove: function (event: MouseEvent) {
 				event.preventDefault();
@@ -154,6 +158,9 @@
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
+
+				// Runs when the operation is complete.
+				funcs?.move?.({ id: spec.id });
 			},
 			handleMouseMove: function () {
 				if (!resizing) return;
@@ -166,7 +173,8 @@
 
 {#if moving || resizing}
 	<div
-		class="snapping-hint ease-snapping"
+		id="snapping-hint"
+		class="ease-snapping"
 		style:width="{snappingHint.w}px"
 		style:height="{snappingHint.h}px"
 		style="
@@ -178,9 +186,9 @@
 {/if}
 
 <div
+	id="widget-wrapper"
 	role="none"
 	bind:this={elem}
-	class="widget-wrapper"
 	class:ease-snapping={!moving && !resizing}
 	style:opacity={moving || resizing ? '0.8' : '1'}
 	style:width="{spec.w}px"
@@ -194,9 +202,10 @@
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
 >
+	<button id="delete" class="center-content">x</button>
 	<div
+		id="widget"
 		role="none"
-		class="widget"
 		style:cursor={moving ? 'grabbing' : 'grab'}
 		onmousedown={WIDGET.move.handleMouseDown}
 		onmouseup={WIDGET.move.handleMouseUp}
@@ -208,12 +217,25 @@
 </div>
 
 <style>
-	.widget-wrapper,
-	.snapping-hint {
+	.center-content {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.ease-snapping {
+		transition-property: width, height, transform;
+		transition-timing-function: ease-in-out;
+		transition-duration: var(--transition-time);
+	}
+
+	#widget-wrapper,
+	#snapping-hint,
+	#delete {
 		position: absolute;
 	}
 
-	.widget-wrapper {
+	#widget-wrapper {
 		transform: translateX(var(--x-pos)) translateY(var(--y-pos));
 		padding: 10px;
 		background-color: white;
@@ -222,22 +244,27 @@
 		resize: both;
 	}
 
-	.widget {
+	#widget {
 		width: 100%;
 		height: 100%;
 		background-color: gray;
 	}
 
-	.snapping-hint {
+	#snapping-hint {
 		transform: translateX(var(--snapping-hint-x-pos))
 			translateY(var(--snapping-hint-y-pos));
 		background-color: #443443;
 		opacity: 0.3;
 	}
 
-	.ease-snapping {
-		transition-property: width, height, transform;
-		transition-timing-function: ease-in-out;
-		transition-duration: var(--transition-time);
+	button#delete {
+		background: blue;
+		top: 0;
+		right: 0;
+		width: 20px;
+		height: 20px;
+		border: none;
+		outline: none;
+		cursor: pointer;
 	}
 </style>

@@ -4,8 +4,6 @@
 
 	/*
 	 * TODO:
-	 * - [x] Add ability to delete widgets.
-	 *
 	 * + Add ability to add widgets.
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.

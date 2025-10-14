@@ -8,11 +8,7 @@
 	 * + Add ability to add widgets.
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
-	 *
-	 * FIX:
-	 * + When resizing a widget and letting to, the widget resizing is \
-	 *   instant, and not a smooth transition. \
-	 *   Should be some smoothing here to give a better impression.
+	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
 	 */
 
 	interface Props {
@@ -20,7 +16,7 @@
 		moving: boolean;
 		resizing: boolean;
 		snappingArea: number;
-		snappingAnim: string;
+		snappingAnimTime: string;
 		funcs?: IFuncs;
 		children?: Snippet;
 	}
@@ -30,10 +26,15 @@
 		moving = $bindable(),
 		resizing = $bindable(),
 		snappingArea,
-		snappingAnim = '200ms ease',
+		snappingAnimTime,
 		funcs,
 		children
 	}: Props = $props();
+
+	/**
+	 * The widget itself (the wrapper at least...).
+	 */
+	let elem = $state<HTMLDivElement>();
 
 	/**
 	 * Where the cursor anchors on the element, for precise movement.
@@ -61,13 +62,13 @@
 	/**
 	 * Adjust the position of the widget to match the snapping-area.
 	 */
-	const adjustedPosition = (coords: IPosition): IPosition => ({
+	const adjustedPosition = (position: IPosition): IPosition => ({
 		x:
-			coords.x % snappingArea > snappingThreshold
+			position.x % snappingArea > snappingThreshold
 				? roundSpecUp('x')
 				: roundSpecDown('x'),
 		y:
-			coords.y % snappingArea > snappingThreshold
+			position.y % snappingArea > snappingThreshold
 				? roundSpecUp('y')
 				: roundSpecDown('y')
 	});
@@ -120,29 +121,27 @@
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
 				event.preventDefault();
+				event.stopPropagation();
 				moving = true;
 				cursorElemAnchor.x = event.offsetX;
 				cursorElemAnchor.y = event.offsetY;
 			},
 			handleMouseUp: function (event: MouseEvent) {
 				event.preventDefault();
+				event.stopPropagation();
+				spec.x = snappingHint.x;
+				spec.y = snappingHint.y;
 				moving = false;
-				const adjusted = adjustedPosition({ x: spec.x, y: spec.y });
-				spec.x = adjusted.x;
-				spec.y = adjusted.y;
 			},
 			handleMouseMove: function (event: MouseEvent) {
 				event.preventDefault();
+				event.stopPropagation();
 				if (!moving) return;
 				spec.x -= cursorElemAnchor.x - event.offsetX;
 				spec.y -= cursorElemAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
 				event.preventDefault();
-				/*
-				 * BUG: Fast movement ending in the cursor leaving the widget-position
-				 * incomplete making the widget "freeze" in time. Should fix.
-				 */
 				moving = false;
 			}
 		},
@@ -154,6 +153,11 @@
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
+			},
+			handleMouseMove: function () {
+				if (!resizing) return;
+				spec.w = elem!.clientWidth;
+				spec.h = elem!.clientHeight;
 			}
 		}
 	};
@@ -167,29 +171,27 @@
 		style="
 			--snapping-hint-x-pos: {snappingHint.x}px;
 			--snapping-hint-y-pos: {snappingHint.y}px;
-			--transition: transform {snappingAnim},
-				width {snappingAnim},
-				height {snappingAnim};
+			--transition-time: calc({snappingAnimTime} / 4);
 		"
 	></div>
 {/if}
 
 <div
 	role="none"
-	bind:clientWidth={spec.w}
-	bind:clientHeight={spec.h}
+	bind:this={elem}
 	class="widget-wrapper"
-	class:ease-snapping={!moving}
+	class:ease-snapping={!moving && !resizing}
 	style:opacity={moving || resizing ? '0.8' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
 	style="
 		--x-pos: {spec.x}px;
 		--y-pos: {spec.y}px;
-		--transition: transform {snappingAnim};
+		--transition-time: {snappingAnimTime};
 	"
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
+	onmousemove={WIDGET.resize.handleMouseMove}
 >
 	<div
 		role="none"
@@ -233,6 +235,8 @@
 	}
 
 	.ease-snapping {
-		transition: var(--transition);
+		transition-property: width, height, transform;
+		transition-timing-function: ease-in-out;
+		transition-duration: var(--transition-time);
 	}
 </style>

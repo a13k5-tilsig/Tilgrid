@@ -5,13 +5,13 @@
 	const DEFAULT_WIDTH: string = '100%'; // css size
 	const DEFAULT_HEIGHT: string = '100%'; // css size
 	const DEFAULT_SNAPPING_AREA: number = 50; // px
-	const DEFAULT_SNAPPING_ANIM: string = '200ms ease'; // css transition
+	const DEFAULT_SNAPPING_ANIM: string = '200ms'; // css transition time
 
 	interface Props {
 		w?: string;
 		h?: string;
 		snappingArea?: number;
-		snappingAnim?: string;
+		snappingAnimTime?: string;
 		widgets: IWidget[];
 		funcs?: IFuncs;
 	}
@@ -20,7 +20,7 @@
 		w = DEFAULT_WIDTH,
 		h = DEFAULT_HEIGHT,
 		snappingArea = DEFAULT_SNAPPING_AREA,
-		snappingAnim = DEFAULT_SNAPPING_ANIM,
+		snappingAnimTime = DEFAULT_SNAPPING_ANIM,
 		widgets = $bindable(),
 		funcs
 	}: Props = $props();
@@ -49,7 +49,7 @@
 			bind:moving
 			bind:resizing
 			{snappingArea}
-			{snappingAnim}
+			{snappingAnimTime}
 			{funcs}
 		/>
 	{/each}

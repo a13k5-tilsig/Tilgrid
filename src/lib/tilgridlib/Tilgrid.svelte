@@ -1,15 +1,17 @@
 <script lang="ts">
-	import type { IWidget, IFuncs } from './Widget.svelte';
+	import type { IWidget, IFuncs } from './types/widget.ts';
 	import Widget from './Widget.svelte';
 
-	const DEFAULT_WIDTH: string = '100%';
-	const DEFAULT_HEIGHT: string = '100%';
-	const DEFAULT_SNAPPING_AREA: number = 50;
+	const DEFAULT_WIDTH: string = '100%'; // css size
+	const DEFAULT_HEIGHT: string = '100%'; // css size
+	const DEFAULT_SNAPPING_AREA: number = 50; // px
+	const DEFAULT_SNAPPING_ANIM: string = '200ms ease'; // css transition
 
 	interface Props {
 		w?: string;
 		h?: string;
 		snappingArea?: number;
+		snappingAnim?: string;
 		widgets: IWidget[];
 		funcs?: IFuncs;
 	}
@@ -18,27 +20,38 @@
 		w = DEFAULT_WIDTH,
 		h = DEFAULT_HEIGHT,
 		snappingArea = DEFAULT_SNAPPING_AREA,
+		snappingAnim = DEFAULT_SNAPPING_ANIM,
 		widgets = $bindable(),
 		funcs
 	}: Props = $props();
 
-	// Fix the alignment of the snapping-points to start from 0.0.
-	let snappingAlignComp: string = $derived((snappingArea / 2).toFixed());
+	/**
+	 * Fix the alignment of the snapping-points to start from 0.0.
+	 */
+	let alignSnappingGrid: string = $derived((snappingArea / 2).toFixed());
 
-	let moving: boolean = $state(true);
+	let moving: boolean = $state(false);
+	let resizing: boolean = $state(false);
 </script>
 
 <div
-	class:snapp-hints={moving}
+	class:snapp-hints={moving || resizing}
 	style:width={w}
 	style:height={h}
 	style="
 		--snapping-area: {snappingArea}px;
-		--snapping-align-comp: {snappingAlignComp}px;
+		--snapping-align-comp: {alignSnappingGrid}px;
 	"
 >
 	{#each widgets as _, i}
-		<Widget bind:spec={widgets[i]} {snappingArea} {funcs} />
+		<Widget
+			bind:spec={widgets[i]}
+			bind:moving
+			bind:resizing
+			{snappingArea}
+			{snappingAnim}
+			{funcs}
+		/>
 	{/each}
 </div>
 

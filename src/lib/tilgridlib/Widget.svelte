@@ -4,13 +4,24 @@
 
 	/*
 	 * TODO:
-	 * - [ ] Add ability to delete widgets.
+	 * - [x] Add ability to delete widgets.
 	 *
 	 * + Add ability to add widgets.
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
 	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
 	 * + Add locked feature for locking widgets and hiding ability to delete the items.
+	 * + Make the snapping-hint fade away instead of outright disappear when completing \
+	 *   move and reseize operations.
+	 *
+	 * FIX:
+	 * + When moving a widget fast and the cursor goes outside the widget; \
+	 *   the widget stays in the last position before the cursor went outside, \
+	 *   leaving the widget not snapped-in-place until the widget is moved again.
+	 * + Some Svelte array re-indexing funk, not necessarily a bug; \
+	 *   When placing two widgets besides eachother (make them big for best visibility) \
+	 *   and then delete the one to the left, for a secong, the one to the right takes \
+	 *   the place of the deleted one before shifting back to its own position again.
 	 */
 
 	interface Props {
@@ -167,6 +178,12 @@
 				spec.w = elem!.clientWidth;
 				spec.h = elem!.clientHeight;
 			}
+		},
+		remove: function (event: MouseEvent) {
+			event.preventDefault();
+			event.stopPropagation();
+			// Runs immediately.
+			funcs?.remove?.({ id: spec.id });
 		}
 	};
 </script>
@@ -202,7 +219,29 @@
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
 >
-	<button id="delete" class="center-content">x</button>
+	<!--
+		only appears if a remove-function is provided by the component
+		hosting the Tilgrid main component.
+	-->
+	{#if !!funcs?.remove}
+		<button
+			id="remove"
+			class="center-content"
+			onmousedown={(e) => e.stopPropagation()}
+			onclick={WIDGET.remove}
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+				<!--
+					!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com \
+					License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.
+				-->
+				<path
+					d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"
+				/>
+			</svg>
+		</button>
+	{/if}
+
 	<div
 		id="widget"
 		role="none"
@@ -212,7 +251,44 @@
 		onmousemove={WIDGET.move.handleMouseMove}
 		onmouseleave={WIDGET.move.handleMouseLeave}
 	>
-		{@render children?.()}
+		{#if !!children}
+			{@render children()}
+		{:else}
+			<!--
+				FIX:
+				Some funk with snapping when grabbing over text \
+				and then moving up and down.
+			-->
+			<div id="placeholder" class="center-content">
+				<div style:font-family="Arial, Helvetica, sans-serif">
+					<h4>
+						If you see this,
+						<br />
+						there is no widget.
+					</h4>
+					<br />
+					Width:
+					<span style:float="right" style:margin-left="10px">
+						{spec.w}px
+					</span>
+					<br />
+					Height:
+					<span style:float="right" style:margin-left="10px">
+						{spec.h}px
+					</span>
+					<br />
+					Position from top:
+					<span style:float="right" style:margin-left="10px">
+						{spec.y}px
+					</span>
+					<br />
+					Position from left:
+					<span style:float="right" style:margin-left="10px">
+						{spec.x}px
+					</span>
+				</div>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -231,7 +307,7 @@
 
 	#widget-wrapper,
 	#snapping-hint,
-	#delete {
+	#remove {
 		position: absolute;
 	}
 
@@ -248,6 +324,7 @@
 		width: 100%;
 		height: 100%;
 		background-color: gray;
+		overflow: hidden;
 	}
 
 	#snapping-hint {
@@ -257,14 +334,29 @@
 		opacity: 0.3;
 	}
 
-	button#delete {
-		background: blue;
+	button#remove {
+		background-color: pink;
 		top: 0;
 		right: 0;
 		width: 20px;
 		height: 20px;
-		border: none;
+		padding: 0;
+		border: 2px solid white;
 		outline: none;
 		cursor: pointer;
+		& :hover {
+			background-color: red;
+		}
+	}
+
+	div#placeholder {
+		width: 100%;
+		height: 100%;
+	}
+
+	div#placeholder h4 {
+		margin: 0;
+		padding: 0;
+		text-align: center;
 	}
 </style>

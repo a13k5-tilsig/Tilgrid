@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { type IFuncs } from '$lib/tilgridlib/Tilgrid.svelte';
-	import { type IWidget } from '$lib/tilgridlib/Widget.svelte';
+	import type { IWidget, IFuncs } from '$lib/tilgridlib/types/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 
 	let widgets: IWidget[] = $state([
@@ -21,23 +20,26 @@
 	]);
 
 	function fetchWidgets() {
-		//
+		// For API GET
 	}
 
 	function updateWidgets() {
-		//
+		// For API UPDATE
 	}
 
-	/*
+	/**
 	 * functions to run along the default behaviour
 	 * when a widget is added or deleted.
+	 *
+	 * If these arent present; the corresponding buttons \
+	 * won't be present either.
 	 */
 	const funcs: IFuncs = {
 		add: function () {
 			//
 		},
-		remove: function (id: Pick<IWidget, 'id'>) {
-			//
+		remove: function (widget: Pick<IWidget, 'id'>) {
+			widgets = widgets.filter((w: IWidget) => w.id != widget.id);
 		}
 	};
 </script>

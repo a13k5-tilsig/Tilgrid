@@ -9,6 +9,7 @@
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
 	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
+	 * + Add locked feature for locking widgets and hiding ability to delete the items.
 	 */
 
 	interface Props {

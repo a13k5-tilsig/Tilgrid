@@ -12,6 +12,7 @@
 		h?: string;
 		snappingArea?: number;
 		snappingAnimTime?: string;
+		locked?: boolean;
 		widgets: IWidget[];
 		funcs?: IFuncs;
 	}
@@ -21,6 +22,7 @@
 		h = DEFAULT_HEIGHT,
 		snappingArea = DEFAULT_SNAPPING_AREA,
 		snappingAnimTime = DEFAULT_SNAPPING_ANIM,
+		locked = false,
 		widgets = $bindable(),
 		funcs
 	}: Props = $props();

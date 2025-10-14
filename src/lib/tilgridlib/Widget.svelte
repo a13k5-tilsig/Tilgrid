@@ -15,9 +15,6 @@
 	 *   move and reseize operations.
 	 *
 	 * FIX:
-	 * + When moving a widget fast and the cursor goes outside the widget; \
-	 *   the widget stays in the last position before the cursor went outside, \
-	 *   leaving the widget not snapped-in-place until the widget is moved again.
 	 * + Some Svelte array re-indexing funk, not necessarily a bug; \
 	 *   When placing two widgets besides eachother (make them big for best visibility) \
 	 *   and then delete the one to the left, for a secong, the one to the right takes \
@@ -158,6 +155,9 @@
 			},
 			handleMouseLeave: function (event: MouseEvent) {
 				event.preventDefault();
+				// Set the last snapped position before stopping the operation.
+				spec.x = snappingHint.x;
+				spec.y = snappingHint.y;
 				moving = false;
 			}
 		},

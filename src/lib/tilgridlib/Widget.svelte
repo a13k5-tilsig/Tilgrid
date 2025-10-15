@@ -265,6 +265,11 @@
 						there is no widget.
 					</h4>
 					<br />
+					ID:
+					<span style:float="right" style:margin-left="10px">
+						{spec.id}
+					</span>
+					<br />
 					Width:
 					<span style:float="right" style:margin-left="10px">
 						{spec.w}px

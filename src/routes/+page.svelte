@@ -36,9 +36,19 @@
 	 */
 	const funcs: IFuncs = {
 		add: function () {
-			//
+			/*
+			 * NOTE:
+			 * Should IDs perhaps not be iterable?
+			 * Maybe randomize (UUID?) instead?
+			 */
 		},
 		remove: function (widget: Pick<IWidget, 'id'>) {
+			/*
+			 * NOTE:
+			 * Not efficient to replace the whole array, that has visual \
+			 * side-effect (weird movement shifting of un-affected widgets). \
+			 * Rewrite to modify only the original array.
+			 */
 			widgets = widgets.filter((w: IWidget) => w.id != widget.id);
 		}
 	};

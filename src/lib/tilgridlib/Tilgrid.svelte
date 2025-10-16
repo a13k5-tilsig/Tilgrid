@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IWidget, IFuncs } from './types/widget.ts';
+	import type { IFuncs, IWidget } from './types/widget.ts';
 	import Widget from './Widget.svelte';
 
 	const DEFAULT_WIDTH: string = '100%'; // css size

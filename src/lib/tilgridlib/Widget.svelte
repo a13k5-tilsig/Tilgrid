@@ -9,6 +9,7 @@
 	 * + Add main ability of rendering passed children.
 	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
 	 * + Add locked feature for locking widgets and hiding ability to delete the items.
+	 * + Add ability to scale the container vertically (for slimmer viewing) (how?).
 	 * + Make the snapping-hint fade away instead of outright disappear when completing \
 	 *   move and reseize operations.
 	 *

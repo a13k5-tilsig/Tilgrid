@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
 	import type { IWidget, IFuncs } from '$lib/tilgridlib/types/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 
@@ -35,14 +36,36 @@
 	 * won't be present either.
 	 */
 	const funcs: IFuncs = {
-		add: function () {
-			//
-		},
 		remove: function (widget: Pick<IWidget, 'id'>) {
 			widgets = widgets.filter((w: IWidget) => w.id != widget.id);
 		}
 	};
+
+	const conatinerWidth = 1000;
+	const conatinerHeight = 800;
+	const snappingArea = 50;
+
+	function addNewWidget() {
+		let newPos = findAvailablePosition(
+			{ w: conatinerWidth, h: conatinerHeight },
+			snappingArea,
+			{ w: 200, h: 100 },
+			widgets
+		);
+
+		console.log('newPos:', newPos);
+
+		widgets.push({
+			id: 2, // genWidgetId()
+			x: newPos.x, // findSpace(...).x
+			y: newPos.y, // findSpace(...).y
+			w: 200, // find a default size here
+			h: 100 // fina a default size here
+		});
+	}
 </script>
+
+<button onclick={addNewWidget}>add</button>
 
 <div
 	style:background-color="lightgray"
@@ -50,7 +73,7 @@
 	style:height="800px"
 	style:margin="50px"
 >
-	<Tilgrid bind:widgets {funcs} />
+	<Tilgrid bind:widgets {funcs} snappingArea={50} />
 </div>
 
 <style>

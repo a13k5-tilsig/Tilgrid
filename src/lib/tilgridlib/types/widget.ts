@@ -9,7 +9,7 @@ export interface ISize {
 }
 
 export interface IWidget extends IPosition, ISize {
-	id: number;
+	id: string;
 }
 
 /**

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
-	import type { IWidget, IFuncs } from '$lib/tilgridlib/types/widget';
+	import type { IWidget, IFuncs, ISize } from '$lib/tilgridlib/types/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 
 	let widgets: IWidget[] = $state([
 		{
-			id: 0,
+			id: crypto.randomUUID(),
 			x: 0,
 			y: 0,
 			w: 200,
 			h: 100
 		},
 		{
-			id: 1,
+			id: crypto.randomUUID(),
 			x: 200,
 			y: 100,
 			w: 200,
@@ -33,26 +33,25 @@
 		}
 	};
 
-	const conatinerWidth = 2000;
-	const conatinerHeight = 1000;
 	const snappingArea = 50;
+	const widgetInitialSize: ISize = { w: 400, h: 300 };
+
+	let wrapper = $state<HTMLDivElement>();
 
 	function addNewWidget() {
 		let newPos = findAvailablePosition(
-			{ w: conatinerWidth, h: conatinerHeight },
+			{ w: wrapper!.clientWidth, h: wrapper!.clientHeight },
 			snappingArea,
-			{ w: 200, h: 100 },
+			{ w: 400, h: 300 },
 			widgets
 		);
 
-		console.log('newPos:', newPos);
-
 		widgets.push({
-			id: 2, // genWidgetId()
-			x: newPos.x, // findSpace(...).x
-			y: newPos.y, // findSpace(...).y
-			w: 200, // find a default size here
-			h: 100 // fina a default size here
+			id: crypto.randomUUID(),
+			x: newPos.x,
+			y: newPos.y,
+			w: widgetInitialSize.w,
+			h: widgetInitialSize.h
 		});
 	}
 </script>
@@ -60,10 +59,10 @@
 <button onclick={addNewWidget}>add</button>
 
 <div
+	bind:this={wrapper}
 	style:background-color="lightgray"
-	style:width="2000px"
-	style:height="1000px"
-	style:margin="50px"
+	style:width="100%"
+	style:height="100%"
 >
 	<Tilgrid bind:widgets {funcs} snappingArea={50} />
 </div>

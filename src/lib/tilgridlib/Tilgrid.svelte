@@ -5,7 +5,7 @@
 	const DEFAULT_WIDTH: string = '100%'; // css size
 	const DEFAULT_HEIGHT: string = '100%'; // css size
 	const DEFAULT_SNAPPING_AREA: number = 50; // px
-	const DEFAULT_SNAPPING_ANIM: number = 1000; // ms
+	const DEFAULT_SNAPPING_ANIM: number = 200; // ms
 
 	interface Props {
 		w?: string;

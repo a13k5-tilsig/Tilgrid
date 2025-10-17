@@ -13,6 +13,7 @@
 		snappingArea?: number;
 		snappingAnimTime?: string;
 		locked?: boolean;
+		verticallyDynamic?: boolean;
 		widgets: IWidget[];
 		funcs?: IFuncs;
 	}
@@ -23,6 +24,7 @@
 		snappingArea = DEFAULT_SNAPPING_AREA,
 		snappingAnimTime = DEFAULT_SNAPPING_ANIM,
 		locked = false,
+		verticallyDynamic = true,
 		widgets = $bindable(),
 		funcs
 	}: Props = $props();

@@ -112,7 +112,7 @@ export function findAvailablePosition(
 	snappingArea: number,
 	widgetSize: ISize,
 	widgets: IWidget[]
-): IPosition | null {
+): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.h, snappingArea),
 		fromPxToMatrixCells(containerSize.w, snappingArea)
@@ -183,5 +183,5 @@ export function findAvailablePosition(
 	 *
 	 * NOTE: Perhaps account for vertically dynamic containers?
 	 */
-	return null;
+	return { x: -1, y: -1 };
 }

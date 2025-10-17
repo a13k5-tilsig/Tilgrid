@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { IWidget, ISize, IPosition, IFuncs } from './types/widget';
 	import { type Snippet } from 'svelte';
+	import XIcon from './XIcon.svelte';
+	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
 
 	/*
 	 * TODO:
@@ -27,7 +29,7 @@
 		moving: boolean;
 		resizing: boolean;
 		snappingArea: number;
-		snappingAnimTime: string;
+		snappingAnimTime: number;
 		funcs?: IFuncs;
 		children?: Snippet;
 	}
@@ -240,15 +242,7 @@
 			onmousedown={(e) => e.stopPropagation()}
 			onclick={WIDGET.remove}
 		>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-				<!--
-					!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com \
-					License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.
-				-->
-				<path
-					d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"
-				/>
-			</svg>
+			<XIcon />
 		</button>
 	{/if}
 
@@ -264,40 +258,13 @@
 		{#if !!children}
 			{@render children()}
 		{:else}
-			<!--
-				FIX:
-				Some funk with snapping when grabbing over text \
-				and then moving up and down.
-			-->
-			<div id="placeholder" class="center-content">
-				<div style:font-family="Arial, Helvetica, sans-serif">
-					<h4>
-						If you see this,
-						<br />
-						there is no widget.
-					</h4>
-					<br />
-					Width:
-					<span style:float="right" style:margin-left="10px">
-						{spec.w}px
-					</span>
-					<br />
-					Height:
-					<span style:float="right" style:margin-left="10px">
-						{spec.h}px
-					</span>
-					<br />
-					Position from top:
-					<span style:float="right" style:margin-left="10px">
-						{spec.y}px
-					</span>
-					<br />
-					Position from left:
-					<span style:float="right" style:margin-left="10px">
-						{spec.x}px
-					</span>
-				</div>
-			</div>
+			<WidgetPlaceholder
+				id={spec.id}
+				w={spec.w}
+				h={spec.h}
+				x={spec.x}
+				y={spec.y}
+			/>
 		{/if}
 	</div>
 </div>
@@ -353,19 +320,8 @@
 		border: 2px solid white;
 		outline: none;
 		cursor: pointer;
-		& :hover {
+		&:hover {
 			background-color: red;
 		}
-	}
-
-	div#placeholder {
-		width: 100%;
-		height: 100%;
-	}
-
-	div#placeholder h4 {
-		margin: 0;
-		padding: 0;
-		text-align: center;
 	}
 </style>

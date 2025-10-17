@@ -20,14 +20,6 @@
 		}
 	]);
 
-	function fetchWidgets() {
-		// For API GET
-	}
-
-	function updateWidgets() {
-		// For API UPDATE
-	}
-
 	/**
 	 * functions to run along the default behaviour
 	 * when a widget is added or deleted.
@@ -41,8 +33,8 @@
 		}
 	};
 
-	const conatinerWidth = 1000;
-	const conatinerHeight = 800;
+	const conatinerWidth = 2000;
+	const conatinerHeight = 1000;
 	const snappingArea = 50;
 
 	function addNewWidget() {
@@ -69,8 +61,8 @@
 
 <div
 	style:background-color="lightgray"
-	style:width="1000px"
-	style:height="800px"
+	style:width="2000px"
+	style:height="1000px"
 	style:margin="50px"
 >
 	<Tilgrid bind:widgets {funcs} snappingArea={50} />

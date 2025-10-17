@@ -91,6 +91,10 @@ function getMatrixCellCoordinatesFromWidgets(
 }
 
 /**
+ *
+ * TODO:
+ * Wrap this inside a static class instead? kinda chunky.
+ *
  * Finds space for a new widget in between all other widgets.
  * This is to avoid widgets shifting position in order
  * to make room for the new widget at position 0.0.
@@ -147,6 +151,12 @@ export function findAvailablePosition(
 		// Target width.
 		for (let tw = 0; tw < targetWidth; tw++) {
 			let window = [];
+
+			/*
+			 * TODO:
+			 * Do this using slices (or something equal) to avoid the
+			 * ugly nesting.
+			 */
 
 			// Window height.
 			for (let wh = 0; wh < windowHeight; wh++) {

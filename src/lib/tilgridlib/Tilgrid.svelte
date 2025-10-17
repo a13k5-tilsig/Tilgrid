@@ -5,13 +5,13 @@
 	const DEFAULT_WIDTH: string = '100%'; // css size
 	const DEFAULT_HEIGHT: string = '100%'; // css size
 	const DEFAULT_SNAPPING_AREA: number = 50; // px
-	const DEFAULT_SNAPPING_ANIM: string = '200ms'; // css transition time
+	const DEFAULT_SNAPPING_ANIM: number = 1000; // ms
 
 	interface Props {
 		w?: string;
 		h?: string;
 		snappingArea?: number;
-		snappingAnimTime?: string;
+		snappingAnimTime?: number;
 		locked?: boolean;
 		verticallyDynamic?: boolean;
 		widgets: IWidget[];

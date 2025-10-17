@@ -50,6 +50,11 @@
 	let elem = $state<HTMLDivElement>();
 
 	/**
+	 * State to be observed if this element is moving.
+	 */
+	let elemIsMoving: boolean = $state(false);
+
+	/**
 	 * Where the cursor anchors on the element, for precise movement.
 	 */
 	let cursorElemAnchor: IPosition = $state({ x: 0, y: 0 });
@@ -146,6 +151,7 @@
 				event.preventDefault();
 				event.stopPropagation();
 				moving = true;
+				elemIsMoving = true;
 				cursorElemAnchor.x = event.offsetX;
 				cursorElemAnchor.y = event.offsetY;
 			},
@@ -155,6 +161,7 @@
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
+				elemIsMoving = false;
 
 				// Runs when the operation is complete.
 				funcs?.move?.({ id: spec.id });
@@ -177,11 +184,13 @@
 		resize: {
 			handleMouseDown: function () {
 				resizing = true;
+				elemIsMoving = true;
 			},
 			handleMouseUp: function () {
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
+				elemIsMoving = false;
 
 				// Runs when the operation is complete.
 				funcs?.move?.({ id: spec.id });
@@ -204,13 +213,14 @@
 <div
 	id="snapping-hint"
 	class="ease-snapping"
+	class:on-top={elemIsMoving}
 	style:width="{snappingHint.w}px"
 	style:height="{snappingHint.h}px"
-	style:opacity={moving || resizing ? 0.4 : 0}
+	style:opacity={elemIsMoving ? 0.4 : 0}
 	style="
 		--snapping-hint-x-pos: {snappingHint.x}px;
 		--snapping-hint-y-pos: {snappingHint.y}px;
-		--transition-time: calc({snappingAnimTime} / 2);
+		--transition-time: calc({snappingAnimTime}ms / 2);
 	"
 ></div>
 
@@ -218,14 +228,15 @@
 	id="widget-wrapper"
 	role="none"
 	bind:this={elem}
-	class:ease-snapping={!moving && !resizing}
-	style:opacity={moving || resizing ? '0.8' : '1'}
+	class:on-top={elemIsMoving}
+	class:ease-snapping={!elemIsMoving}
+	style:opacity={elemIsMoving ? '0.8' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
 	style="
 		--x-pos: {spec.x}px;
 		--y-pos: {spec.y}px;
-		--transition-time: {snappingAnimTime};
+		--transition-time: {snappingAnimTime}ms;
 	"
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
@@ -270,6 +281,9 @@
 </div>
 
 <style>
+	.on-top {
+		z-index: 999 !important;
+	}
 	.center-content {
 		display: flex;
 		justify-content: center;
@@ -277,7 +291,7 @@
 	}
 
 	.ease-snapping {
-		transition-property: width, height, transform, opacity;
+		transition-property: width, height, transform, opacity !important;
 		transition-timing-function: ease-in-out;
 		transition-duration: var(--transition-time);
 	}
@@ -295,6 +309,7 @@
 		box-sizing: border-box;
 		overflow: auto;
 		resize: both;
+		transition: opacity var(--transition-time) ease-in-out;
 	}
 
 	#widget {

@@ -8,24 +8,26 @@
 	const DEFAULT_SNAPPING_ANIM: number = 200; // ms
 
 	interface Props {
-		w?: string;
-		h?: string;
+		container: HTMLDivElement | undefined;
+		widgets: IWidget[];
+		width?: string;
+		height?: string;
 		snappingArea?: number;
 		snappingAnimTime?: number;
-		locked?: boolean;
+		editing?: boolean;
 		verticallyDynamic?: boolean;
-		widgets: IWidget[];
 		funcs?: IFuncs;
 	}
 
 	let {
-		w = DEFAULT_WIDTH,
-		h = DEFAULT_HEIGHT,
+		container = $bindable(),
+		widgets = $bindable(),
+		width = DEFAULT_WIDTH,
+		height = DEFAULT_HEIGHT,
 		snappingArea = DEFAULT_SNAPPING_AREA,
 		snappingAnimTime = DEFAULT_SNAPPING_ANIM,
-		locked = false,
+		editing = true,
 		verticallyDynamic = true,
-		widgets = $bindable(),
 		funcs
 	}: Props = $props();
 
@@ -39,9 +41,10 @@
 </script>
 
 <div
+	bind:this={container}
 	class:snapp-hints={moving || resizing}
-	style:width={w}
-	style:height={h}
+	style:width
+	style:height
 	style="
 		--snapping-area: {snappingArea}px;
 		--snapping-align-comp: {alignSnappingGrid}px;

@@ -10,6 +10,7 @@ export interface ISize {
 
 export interface IWidget extends IPosition, ISize {
 	id: string;
+	config?: string; // Widget-spesiffic config. Parsed in the widget-file.
 }
 
 /**

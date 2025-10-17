@@ -6,12 +6,14 @@
 
 	/*
 	 * TODO:
-	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
+	 * + Add collision mechanism.
 	 * + Add ability to stop widgets from moving out-of-bounds (container).
 	 * + Add locked feature for locking widgets and hiding ability to delete the items.
 	 * + Add ability to scale the container horizontaly (for slimmer viewing) (how?).
 	 * + Add ability to make the widget conteiner vertically dynamic.
+	 * + Add style option; when resizing, only resize a dotted "border" before
+	 *   actually resizing the widget when letting go of the cursor.
 	 *
 	 * FIX:
 	 * + Some Svelte array re-indexing funk, not necessarily a bug;

@@ -36,11 +36,11 @@
 	const snappingArea = 50;
 	const widgetInitialSize: ISize = { w: 400, h: 300 };
 
-	let wrapper = $state<HTMLDivElement>();
+	let container = $state<HTMLDivElement>();
 
 	function addNewWidget() {
 		let newPos = findAvailablePosition(
-			{ w: wrapper!.clientWidth, h: wrapper!.clientHeight },
+			{ w: container!.clientWidth, h: container!.clientHeight },
 			snappingArea,
 			{ w: 400, h: 300 },
 			widgets
@@ -58,13 +58,14 @@
 
 <button onclick={addNewWidget}>add</button>
 
-<div
-	bind:this={wrapper}
-	style:background-color="lightgray"
-	style:width="100%"
-	style:height="100%"
->
-	<Tilgrid bind:widgets {funcs} snappingArea={50} />
+<div style:background-color="lightgray" style:width="100%" style:height="100%">
+	<Tilgrid
+		bind:container
+		bind:widgets
+		editing={false}
+		{funcs}
+		snappingArea={50}
+	/>
 </div>
 
 <style>

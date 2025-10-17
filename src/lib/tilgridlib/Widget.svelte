@@ -9,14 +9,17 @@
 	 * + Add ability to stop widgets from moving out-of-bounds (container).
 	 * + Add locked feature for locking widgets and hiding ability to delete the items.
 	 * + Add ability to scale the container horizontaly (for slimmer viewing) (how?).
-	 * + Make the snapping-hint fade away instead of outright disappear when completing
-	 *   move and reseize operations.
+	 * + Add ability to make the widget conteiner vertically dynamic.
 	 *
 	 * FIX:
 	 * + Some Svelte array re-indexing funk, not necessarily a bug;
 	 *   When placing two widgets besides eachother (make them big for best visibility)
 	 *   and then delete the one to the left, for a secong, the one to the right takes
 	 *   the place of the deleted one before shifting back to its own position again.
+	 * + When moving a widget and the cursor hovers over neighboring widgets;
+	 *   those widgets detect that as a mouseDown event.
+	 *   Fix by making it so that only one widget can be moved at a time, so when hovering
+	 *   a widget that isn't being moved, that widget won't act on the event.
 	 */
 
 	interface Props {

@@ -1,20 +1,33 @@
 import type { IPosition, ISize, IWidget } from '../types/widget.ts';
 
 /**
- * Convert a given amount of pixels into its value in matrix blocks.
+ * Convert a given amount of pixels into its value in matrix cells.
  *
- * @returns rounded down (floored) px divided by blockSize.
+ * @param pixels - How many pixels to convert.
+ * @param matrixBlockSize - The size (in pixels) of a matrix cell.
+ * @returns (floored(pixels / matrixCellSize)).
  */
-function fromPxToMatrixBlocks(pixels: number, matrixBlockSize: number): number {
-	return Math.floor(pixels / matrixBlockSize);
-}
-
-function fromMatrixBlocksToPx(blocks: number, matrixBlockSize: number): number {
-	return blocks * matrixBlockSize;
+function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
+	return Math.floor(pixels / matrixCellSize);
 }
 
 /**
- * @returns a 2D matrix filled with zeroes matching the given dimensions.
+ * Convert a given amount of matrix cells into its value in pixels.
+ *
+ * @param cells - How many cells to convert.
+ * @param matrixCellSize - The size (in pixels) of a matrix cell.
+ * @returns (cells * matrixCellSize).
+ */
+function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
+	return cells * matrixCellSize;
+}
+
+/**
+ * Returns a 2D matrix with cells containing zeroes matching the given dimensions.
+ *
+ * @param rows - Amount of rows (vertical cells).
+ * @param columns - Amount of collumns (horizontal cells).
+ * @returns \[\[some, amount, of, zeroes\], \[some, amount, of, zeroes\], ...\]
  */
 function makeMatrix(rows: number, columns: number): number[][] {
 	let _rows = [];
@@ -29,46 +42,52 @@ function makeMatrix(rows: number, columns: number): number[][] {
 }
 
 /**
- * Places a "1" in occupied matrix blocks.
+ * Places a "1" in occupied matrix cells.
  *
  * @param matrix - A 2D array representing rows and columns.
- * @param items - A 2D array where index[0] represents a row and index[1] represents a column.
- * @returns a 2D matrix where occupied blocks are filled with the number "1".
+ * @param items - A 2D array where index\[0\] represents a row and index\[1\] represents a column.
+ * @returns example: \[\[1, 1, 1, 0, 0, 0\], \[1, 1, 1, 0, 0, 0\]\].
  */
-function fillOccupiedMatrixBlocks(
+function fillOccupiedMatrixCells(
 	matrix: number[][],
-	blockLocations: any[][]
+	cellCoordinates: any[][]
 ): number[][] {
 	let _matrix: number[][] = [...matrix];
-	blockLocations.forEach((i: number[]) => {
+	cellCoordinates.forEach((i: number[]) => {
 		_matrix[i[0]][i[1]] = 1;
 	});
 	return _matrix;
 }
 
 /**
- * @returns what cells in a matrix a widget occupies by X & Y coordinates.
+ * Returns a 2D array with the coordinates of the matrix cells
+ * a array of widgets occupy.
+ *
+ * @param widgets - A array of widgets.
+ * @param matrixCellSize - The size of a cell in the relevant matrix.
+ * @returns \[\[X, Y\], \[X, Y\]\]
  */
-function getMatrixBlockPositionsFromWidgets(
+function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	blockSize: number
+	matrixCellSize: number
 ): number[][] {
-	let occupiedMatrixBlocks: number[][] = [];
+	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
-		let widgetMatrixBlockHeight = fromPxToMatrixBlocks(w.h, blockSize);
-		let widgetMatrixBlockWidth = fromPxToMatrixBlocks(w.w, blockSize);
-		let widgetMatrixPositionFromTop = fromPxToMatrixBlocks(w.y, blockSize);
-		let widgetMatrixPositionFromLeft = fromPxToMatrixBlocks(w.x, blockSize);
-		for (let height = 0; height < widgetMatrixBlockHeight; height++) {
-			for (let width = 0; width < widgetMatrixBlockWidth; width++) {
-				occupiedMatrixBlocks.push([
-					widgetMatrixPositionFromTop + height,
-					widgetMatrixPositionFromLeft + width
+		let widgetMatrixCellHeight = fromPxToMatrixCells(w.h, matrixCellSize);
+		let widgetMatrixCellWidth = fromPxToMatrixCells(w.w, matrixCellSize);
+		let widgetMatrixPositionFromTop = fromPxToMatrixCells(w.y, matrixCellSize);
+		let widgetMatrixPositionFromLeft = fromPxToMatrixCells(w.x, matrixCellSize);
+
+		for (let h = 0; h < widgetMatrixCellHeight; h++) {
+			for (let w = 0; w < widgetMatrixCellWidth; w++) {
+				occupiedMatrixCells.push([
+					widgetMatrixPositionFromTop + h,
+					widgetMatrixPositionFromLeft + w
 				]);
 			}
 		}
 	});
-	return occupiedMatrixBlocks;
+	return occupiedMatrixCells;
 }
 
 /**
@@ -78,41 +97,40 @@ function getMatrixBlockPositionsFromWidgets(
  *
  * Returns position in the matrix where the widget can be positioned.
  *
+ * @param containerSize - The size of the container for the widgets.
+ * @param snappingArea - The size (in pixels) of snappable areas for widgets.
+ * @param widgetSize - The size of the widget to locate a position for.
+ * @param widgets - A array of wigets to use to find occuppied cells.
  * @returns { x: number, y: number }
  */
 export function findAvailablePosition(
 	containerSize: ISize,
 	snappingArea: number,
-	initialWidgetSize: ISize,
+	widgetSize: ISize,
 	widgets: IWidget[]
-): IPosition | undefined {
-	const matrix = makeMatrix(
-		fromPxToMatrixBlocks(containerSize.h, snappingArea),
-		fromPxToMatrixBlocks(containerSize.w, snappingArea)
+): IPosition | null {
+	const containerMatrix = makeMatrix(
+		fromPxToMatrixCells(containerSize.h, snappingArea),
+		fromPxToMatrixCells(containerSize.w, snappingArea)
 	);
 
-	//console.log('matrix:', matrix);
+	const widgetMatrix = makeMatrix(
+		fromPxToMatrixCells(widgetSize.h, snappingArea),
+		fromPxToMatrixCells(widgetSize.w, snappingArea)
+	);
 
-	const occupiedMatrixBlockLocations = getMatrixBlockPositionsFromWidgets(
+	// To be used for finding matching matrix in the container matrix.
+	const widgetMatrixStringified = JSON.stringify(widgetMatrix);
+
+	const occupiedMatrixCellCoordinates = getMatrixCellCoordinatesFromWidgets(
 		widgets,
 		snappingArea
 	);
 
-	//console.log('occupiedMatrixBlockLocations:', occupiedMatrixBlockLocations);
-
-	const filledMatrix = fillOccupiedMatrixBlocks(
-		matrix,
-		occupiedMatrixBlockLocations
+	const filledMatrix = fillOccupiedMatrixCells(
+		containerMatrix,
+		occupiedMatrixCellCoordinates
 	);
-
-	//console.log('filledMatrix:', filledMatrix);
-
-	const widgetMatrix = makeMatrix(
-		fromPxToMatrixBlocks(initialWidgetSize.h, snappingArea),
-		fromPxToMatrixBlocks(initialWidgetSize.w, snappingArea)
-	);
-
-	//console.log('widgetMatrix:', widgetMatrix);
 
 	/**
 	 * sliding window (the brute force approach).
@@ -120,13 +138,14 @@ export function findAvailablePosition(
 
 	const windowHeight = widgetMatrix.length;
 	const windowWidth = widgetMatrix[0].length;
-	const targetHeightMinusWindow = filledMatrix.length - windowHeight + 1;
-	const targetWidthMinusWindow = filledMatrix[0].length - windowWidth + 1;
+	// + 1 to reach the last cell on each axis.
+	const targetHeight = filledMatrix.length - windowHeight + 1;
+	const targetWidth = filledMatrix[0].length - windowWidth + 1;
 
 	// Target height.
-	for (let th = 0; th < targetHeightMinusWindow; th++) {
+	for (let th = 0; th < targetHeight; th++) {
 		// Target width.
-		for (let tw = 0; tw < targetWidthMinusWindow; tw++) {
+		for (let tw = 0; tw < targetWidth; tw++) {
 			let window = [];
 
 			// Window height.
@@ -140,12 +159,19 @@ export function findAvailablePosition(
 				window.push(windowCollumn);
 			}
 
-			if (JSON.stringify(window) === JSON.stringify(widgetMatrix)) {
+			if (JSON.stringify(window) === widgetMatrixStringified) {
 				return {
-					x: fromMatrixBlocksToPx(tw, snappingArea),
-					y: fromMatrixBlocksToPx(th, snappingArea)
+					x: fromMatrixCellsToPx(tw, snappingArea),
+					y: fromMatrixCellsToPx(th, snappingArea)
 				};
 			}
 		}
 	}
+
+	/**
+	 * If no viable position is found (the matrix may be full);
+	 *
+	 * NOTE: Perhaps account for vertically dynamic containers?
+	 */
+	return null;
 }

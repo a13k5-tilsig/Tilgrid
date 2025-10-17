@@ -4,19 +4,18 @@
 
 	/*
 	 * TODO:
-	 * + Add ability to add widgets.
 	 * + Add collision mechanism.
 	 * + Add main ability of rendering passed children.
-	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
+	 * + Add ability to stop widgets from moving out-of-bounds (container).
 	 * + Add locked feature for locking widgets and hiding ability to delete the items.
-	 * + Add ability to scale the container vertically (for slimmer viewing) (how?).
-	 * + Make the snapping-hint fade away instead of outright disappear when completing \
+	 * + Add ability to scale the container horizontaly (for slimmer viewing) (how?).
+	 * + Make the snapping-hint fade away instead of outright disappear when completing
 	 *   move and reseize operations.
 	 *
 	 * FIX:
-	 * + Some Svelte array re-indexing funk, not necessarily a bug; \
-	 *   When placing two widgets besides eachother (make them big for best visibility) \
-	 *   and then delete the one to the left, for a secong, the one to the right takes \
+	 * + Some Svelte array re-indexing funk, not necessarily a bug;
+	 *   When placing two widgets besides eachother (make them big for best visibility)
+	 *   and then delete the one to the left, for a secong, the one to the right takes
 	 *   the place of the deleted one before shifting back to its own position again.
 	 */
 
@@ -51,53 +50,63 @@
 	let cursorElemAnchor: IPosition = $state({ x: 0, y: 0 });
 
 	/**
-	 * How much a widgets spills into a new area before \
+	 * How much a widgets spills into a new area before
 	 * snapp-suggesting the new position.
+	 *
+	 * Note:
+	 * this is only sensitive to spillover in the +X and +Y direction
+	 * maybe fix?.
 	 */
 	let snappingThreshold: number = $derived(snappingArea / 2);
 
 	/**
 	 * Round an axis position up to its closest snapping-area.
 	 */
-	const roundSpecUp = (prop: 'x' | 'y' | 'w' | 'h'): number =>
-		Math.ceil(spec[prop] / snappingArea) * snappingArea;
+	function roundSpecUp(prop: 'x' | 'y' | 'w' | 'h'): number {
+		return Math.ceil(spec[prop] / snappingArea) * snappingArea;
+	}
 
 	/**
 	 * Round an axis position down to its closest snapping-area.
 	 */
-	const roundSpecDown = (prop: 'x' | 'y' | 'w' | 'h'): number =>
-		Math.floor(spec[prop] / snappingArea) * snappingArea;
+	function roundSpecDown(prop: 'x' | 'y' | 'w' | 'h'): number {
+		return Math.floor(spec[prop] / snappingArea) * snappingArea;
+	}
 
 	/**
 	 * Adjust the position of the widget to match the snapping-area.
 	 */
-	const adjustedPosition = (position: IPosition): IPosition => ({
-		x:
-			position.x % snappingArea > snappingThreshold
-				? roundSpecUp('x')
-				: roundSpecDown('x'),
-		y:
-			position.y % snappingArea > snappingThreshold
-				? roundSpecUp('y')
-				: roundSpecDown('y')
-	});
+	function adjustedPosition(position: IPosition): IPosition {
+		return {
+			x:
+				position.x % snappingArea > snappingThreshold
+					? roundSpecUp('x')
+					: roundSpecDown('x'),
+			y:
+				position.y % snappingArea > snappingThreshold
+					? roundSpecUp('y')
+					: roundSpecDown('y')
+		};
+	}
 
 	/**
 	 * Adjust the size of the widget to match the snapping-area.
 	 */
-	const adjustedSize = (size: ISize): ISize => ({
-		w:
-			size.w % snappingArea > snappingThreshold
-				? roundSpecUp('w')
-				: roundSpecDown('w'),
-		h:
-			size.h % snappingArea > snappingThreshold
-				? roundSpecUp('h')
-				: roundSpecDown('h')
-	});
+	function adjustedSize(size: ISize): ISize {
+		return {
+			w:
+				size.w % snappingArea > snappingThreshold
+					? roundSpecUp('w')
+					: roundSpecDown('w'),
+			h:
+				size.h % snappingArea > snappingThreshold
+					? roundSpecUp('h')
+					: roundSpecDown('h')
+		};
+	}
 
 	/**
-	 * The shadow (or ghost, if you will) that hints at the area where the \
+	 * The shadow (or ghost, if you will) that hints at the area where the
 	 * widget will snapp to if you were to let go of the widget.
 	 */
 	const snappingHint = $derived.by(() => {
@@ -187,19 +196,18 @@
 	};
 </script>
 
-{#if moving || resizing}
-	<div
-		id="snapping-hint"
-		class="ease-snapping"
-		style:width="{snappingHint.w}px"
-		style:height="{snappingHint.h}px"
-		style="
-			--snapping-hint-x-pos: {snappingHint.x}px;
-			--snapping-hint-y-pos: {snappingHint.y}px;
-			--transition-time: calc({snappingAnimTime} / 4);
-		"
-	></div>
-{/if}
+<div
+	id="snapping-hint"
+	class="ease-snapping"
+	style:width="{snappingHint.w}px"
+	style:height="{snappingHint.h}px"
+	style:opacity={moving || resizing ? 0.4 : 0}
+	style="
+		--snapping-hint-x-pos: {snappingHint.x}px;
+		--snapping-hint-y-pos: {snappingHint.y}px;
+		--transition-time: calc({snappingAnimTime} / 2);
+	"
+></div>
 
 <div
 	id="widget-wrapper"
@@ -299,7 +307,7 @@
 	}
 
 	.ease-snapping {
-		transition-property: width, height, transform;
+		transition-property: width, height, transform, opacity;
 		transition-timing-function: ease-in-out;
 		transition-duration: var(--transition-time);
 	}
@@ -330,7 +338,6 @@
 		transform: translateX(var(--snapping-hint-x-pos))
 			translateY(var(--snapping-hint-y-pos));
 		background-color: #443443;
-		opacity: 0.3;
 	}
 
 	button#remove {

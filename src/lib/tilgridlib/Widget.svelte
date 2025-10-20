@@ -18,7 +18,7 @@
 	 * FIX:
 	 * + Some Svelte array re-indexing funk, not necessarily a bug;
 	 *   When placing two widgets besides eachother (make them big for best visibility)
-	 *   and then delete the one to the left, for a secong, the one to the right takes
+	 *   and then delete the one to the left, for a second, the one to the right takes
 	 *   the place of the deleted one before shifting back to its own position again.
 	 * + When moving a widget and the cursor hovers over neighboring widgets;
 	 *   those widgets detect that as a mouseDown event.

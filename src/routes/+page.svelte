@@ -40,9 +40,15 @@
 
 	function addNewWidget() {
 		let newPos = findAvailablePosition(
-			{ w: container!.clientWidth, h: container!.clientHeight },
+			{
+				w: container!.clientWidth,
+				h: container!.clientHeight
+			},
 			snappingArea,
-			{ w: 400, h: 300 },
+			{
+				w: 400,
+				h: 300
+			},
 			widgets
 		);
 

@@ -226,14 +226,24 @@
 	{/if}
 
 	<div
-		id="widget"
-		role="none"
-		style:cursor={!editing ? 'auto' : moving ? 'grabbing' : 'grab'}
-		onmousedown={WIDGET.move.handleMouseDown}
-		onmouseup={WIDGET.move.handleMouseUp}
-		onmousemove={WIDGET.move.handleMouseMove}
-		onmouseleave={WIDGET.move.handleMouseLeave}
+		style:position="relative"
+		style:height="100%"
+		style:width="100%"
+		style:user-select={editing ? 'none' : 'initial'}
 	>
+		{#if editing || moving || resizing || editingWidget}
+			<div
+				id="widget"
+				role="none"
+				style:cursor={!editing ? 'auto' : moving ? 'grabbing' : 'grab'}
+				style:opacity="0.5"
+				onmousedown={WIDGET.move.handleMouseDown}
+				onmouseup={WIDGET.move.handleMouseUp}
+				onmousemove={WIDGET.move.handleMouseMove}
+				onmouseleave={WIDGET.move.handleMouseLeave}
+			></div>
+		{/if}
+
 		{#if !!children}
 			{@render children()}
 		{:else}
@@ -259,6 +269,7 @@
 	}
 
 	#widget-wrapper,
+	#widget,
 	#snapping-hint,
 	#remove {
 		position: absolute;

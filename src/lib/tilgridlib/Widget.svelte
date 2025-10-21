@@ -1,33 +1,25 @@
 <script lang="ts">
-	import type { IWidget, ISize, IPosition, IFuncs } from './types/widget';
-	import { type Snippet } from 'svelte';
+	import type { IPosition, ISize } from './types/widget';
+	import type { IWidgetConfig } from './types/config';
+	import XIcon from './XIcon.svelte';
+	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
 
 	/*
 	 * TODO:
-	 * + Add ability to add widgets.
+	 * + Add ability to stop widgets from moving out-of-bounds (container).
+	 *
 	 * + Add collision mechanism.
-	 * + Add main ability of rendering passed children.
-	 * + Add ability to stop widgets from moving out-of-bounds (conatiner).
-	 * + Add locked feature for locking widgets and hiding ability to delete the items.
-	 * + Make the snapping-hint fade away instead of outright disappear when completing \
-	 *   move and reseize operations.
+	 * + Add ability to make the widget container vertically dynamic.
+	 *
+	 * + Add style option; when resizing, only resize a dotted "border" before
+	 *   actually resizing the widget when letting go of the cursor.
 	 *
 	 * FIX:
-	 * + Some Svelte array re-indexing funk, not necessarily a bug; \
-	 *   When placing two widgets besides eachother (make them big for best visibility) \
-	 *   and then delete the one to the left, for a secong, the one to the right takes \
+	 * + Some Svelte array re-indexing funk, not necessarily a bug;
+	 *   When placing two widgets besides eachother (make them big for best visibility)
+	 *   and then delete the one to the left, for a second, the one to the right takes
 	 *   the place of the deleted one before shifting back to its own position again.
 	 */
-
-	interface Props {
-		spec: IWidget;
-		moving: boolean;
-		resizing: boolean;
-		snappingArea: number;
-		snappingAnimTime: string;
-		funcs?: IFuncs;
-		children?: Snippet;
-	}
 
 	let {
 		spec = $bindable(),
@@ -35,9 +27,11 @@
 		resizing = $bindable(),
 		snappingArea,
 		snappingAnimTime,
+		editing,
+		widgetSpace,
 		funcs,
 		children
-	}: Props = $props();
+	}: IWidgetConfig = $props();
 
 	/**
 	 * The widget itself (the wrapper at least...).
@@ -45,58 +39,73 @@
 	let elem = $state<HTMLDivElement>();
 
 	/**
+	 * State to be observed if this element is moving.
+	 */
+	let elemIsMoving: boolean = $state(false);
+
+	/**
 	 * Where the cursor anchors on the element, for precise movement.
 	 */
 	let cursorElemAnchor: IPosition = $state({ x: 0, y: 0 });
 
 	/**
-	 * How much a widgets spills into a new area before \
+	 * How much a widgets spills into a new area before
 	 * snapp-suggesting the new position.
+	 *
+	 * Note:
+	 * this is only sensitive to spillover in the +X and +Y direction
+	 * maybe fix?.
 	 */
-	let snappingThreshold: number = $derived(snappingArea / 2);
+	let snappingThreshold: number = $derived(snappingArea! / 2);
 
 	/**
 	 * Round an axis position up to its closest snapping-area.
 	 */
-	const roundSpecUp = (prop: 'x' | 'y' | 'w' | 'h'): number =>
-		Math.ceil(spec[prop] / snappingArea) * snappingArea;
+	function roundSpecUp(prop: 'x' | 'y' | 'w' | 'h'): number {
+		return Math.ceil(spec[prop] / snappingArea!) * snappingArea!;
+	}
 
 	/**
 	 * Round an axis position down to its closest snapping-area.
 	 */
-	const roundSpecDown = (prop: 'x' | 'y' | 'w' | 'h'): number =>
-		Math.floor(spec[prop] / snappingArea) * snappingArea;
+	function roundSpecDown(prop: 'x' | 'y' | 'w' | 'h'): number {
+		return Math.floor(spec[prop] / snappingArea!) * snappingArea!;
+	}
 
 	/**
 	 * Adjust the position of the widget to match the snapping-area.
 	 */
-	const adjustedPosition = (position: IPosition): IPosition => ({
-		x:
-			position.x % snappingArea > snappingThreshold
-				? roundSpecUp('x')
-				: roundSpecDown('x'),
-		y:
-			position.y % snappingArea > snappingThreshold
-				? roundSpecUp('y')
-				: roundSpecDown('y')
-	});
+	function adjustedPosition(position: IPosition): IPosition {
+		return {
+			x:
+				position.x % snappingArea! > snappingThreshold
+					? roundSpecUp('x')
+					: roundSpecDown('x'),
+			y:
+				position.y % snappingArea! > snappingThreshold
+					? roundSpecUp('y')
+					: roundSpecDown('y')
+		};
+	}
 
 	/**
 	 * Adjust the size of the widget to match the snapping-area.
 	 */
-	const adjustedSize = (size: ISize): ISize => ({
-		w:
-			size.w % snappingArea > snappingThreshold
-				? roundSpecUp('w')
-				: roundSpecDown('w'),
-		h:
-			size.h % snappingArea > snappingThreshold
-				? roundSpecUp('h')
-				: roundSpecDown('h')
-	});
+	function adjustedSize(size: ISize): ISize {
+		return {
+			w:
+				size.w % snappingArea! > snappingThreshold
+					? roundSpecUp('w')
+					: roundSpecDown('w'),
+			h:
+				size.h % snappingArea! > snappingThreshold
+					? roundSpecUp('h')
+					: roundSpecDown('h')
+		};
+	}
 
 	/**
-	 * The shadow (or ghost, if you will) that hints at the area where the \
+	 * The shadow (or ghost, if you will) that hints at the area where the
 	 * widget will snapp to if you were to let go of the widget.
 	 */
 	const snappingHint = $derived.by(() => {
@@ -128,51 +137,56 @@
 	const WIDGET = {
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
+				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
 				moving = true;
+				elemIsMoving = true;
 				cursorElemAnchor.x = event.offsetX;
 				cursorElemAnchor.y = event.offsetY;
 			},
 			handleMouseUp: function (event: MouseEvent) {
+				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
-
-				// Runs when the operation is complete.
+				elemIsMoving = false;
 				funcs?.move?.({ id: spec.id });
 			},
 			handleMouseMove: function (event: MouseEvent) {
+				if (!moving || !editing || !elemIsMoving) return;
 				event.preventDefault();
 				event.stopPropagation();
-				if (!moving) return;
 				spec.x -= cursorElemAnchor.x - event.offsetX;
 				spec.y -= cursorElemAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
+				if (!moving || !editing || !elemIsMoving) return;
 				event.preventDefault();
-				// Set the last snapped position before stopping the operation.
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
+				elemIsMoving = false;
 			}
 		},
 		resize: {
 			handleMouseDown: function () {
+				if (!editing) return;
 				resizing = true;
+				elemIsMoving = true;
 			},
 			handleMouseUp: function () {
+				if (!resizing || !editing || !elemIsMoving) return;
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
-
-				// Runs when the operation is complete.
-				funcs?.move?.({ id: spec.id });
+				elemIsMoving = false;
+				funcs?.size?.({ id: spec.id });
 			},
 			handleMouseMove: function () {
-				if (!resizing) return;
+				if (!resizing || !editing || !elemIsMoving) return;
 				spec.w = elem!.clientWidth;
 				spec.h = elem!.clientHeight;
 			}
@@ -186,32 +200,35 @@
 	};
 </script>
 
-{#if moving || resizing}
-	<div
-		id="snapping-hint"
-		class="ease-snapping"
-		style:width="{snappingHint.w}px"
-		style:height="{snappingHint.h}px"
-		style="
-			--snapping-hint-x-pos: {snappingHint.x}px;
-			--snapping-hint-y-pos: {snappingHint.y}px;
-			--transition-time: calc({snappingAnimTime} / 4);
-		"
-	></div>
-{/if}
+<div
+	id="snapping-hint"
+	class="ease-snapping"
+	class:on-top={elemIsMoving}
+	style:width="{snappingHint.w}px"
+	style:height="{snappingHint.h}px"
+	style:opacity={elemIsMoving ? 0.4 : 0}
+	style="
+		--snapping-hint-x-pos: {snappingHint.x}px;
+		--snapping-hint-y-pos: {snappingHint.y}px;
+		--transition-time: calc({snappingAnimTime}ms / 2);
+	"
+></div>
 
 <div
 	id="widget-wrapper"
 	role="none"
 	bind:this={elem}
-	class:ease-snapping={!moving && !resizing}
-	style:opacity={moving || resizing ? '0.8' : '1'}
+	class:on-top={elemIsMoving}
+	class:ease-snapping={!elemIsMoving}
+	class:editing
+	style:opacity={elemIsMoving ? '0.8' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
 	style="
 		--x-pos: {spec.x}px;
 		--y-pos: {spec.y}px;
-		--transition-time: {snappingAnimTime};
+		--widget-space: {widgetSpace}px;
+		--transition-time: {snappingAnimTime}ms;
 	"
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
@@ -221,29 +238,21 @@
 		only appears if a remove-function is provided by the component
 		hosting the Tilgrid main component.
 	-->
-	{#if !!funcs?.remove}
+	{#if !!funcs?.remove && editing}
 		<button
 			id="remove"
 			class="center-content"
 			onmousedown={(e) => e.stopPropagation()}
 			onclick={WIDGET.remove}
 		>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-				<!--
-					!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com \
-					License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.
-				-->
-				<path
-					d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"
-				/>
-			</svg>
+			<XIcon />
 		</button>
 	{/if}
 
 	<div
 		id="widget"
 		role="none"
-		style:cursor={moving ? 'grabbing' : 'grab'}
+		style:cursor={!editing ? 'auto' : moving ? 'grabbing' : 'grab'}
 		onmousedown={WIDGET.move.handleMouseDown}
 		onmouseup={WIDGET.move.handleMouseUp}
 		onmousemove={WIDGET.move.handleMouseMove}
@@ -252,50 +261,15 @@
 		{#if !!children}
 			{@render children()}
 		{:else}
-			<!--
-				FIX:
-				Some funk with snapping when grabbing over text \
-				and then moving up and down.
-			-->
-			<div id="placeholder" class="center-content">
-				<div style:font-family="Arial, Helvetica, sans-serif">
-					<h4>
-						If you see this,
-						<br />
-						there is no widget.
-					</h4>
-					<br />
-					ID:
-					<span style:float="right" style:margin-left="10px">
-						{spec.id}
-					</span>
-					<br />
-					Width:
-					<span style:float="right" style:margin-left="10px">
-						{spec.w}px
-					</span>
-					<br />
-					Height:
-					<span style:float="right" style:margin-left="10px">
-						{spec.h}px
-					</span>
-					<br />
-					Position from top:
-					<span style:float="right" style:margin-left="10px">
-						{spec.y}px
-					</span>
-					<br />
-					Position from left:
-					<span style:float="right" style:margin-left="10px">
-						{spec.x}px
-					</span>
-				</div>
-			</div>
+			<WidgetPlaceholder {...spec} />
 		{/if}
 	</div>
 </div>
 
 <style>
+	.on-top {
+		z-index: 999 !important;
+	}
 	.center-content {
 		display: flex;
 		justify-content: center;
@@ -303,7 +277,7 @@
 	}
 
 	.ease-snapping {
-		transition-property: width, height, transform;
+		transition-property: width, height, transform, opacity !important;
 		transition-timing-function: ease-in-out;
 		transition-duration: var(--transition-time);
 	}
@@ -316,11 +290,15 @@
 
 	#widget-wrapper {
 		transform: translateX(var(--x-pos)) translateY(var(--y-pos));
-		padding: 10px;
-		background-color: white;
+		padding: var(--widget-space);
 		box-sizing: border-box;
 		overflow: auto;
+		transition: opacity var(--transition-time) ease-in-out;
+	}
+
+	#widget-wrapper.editing {
 		resize: both;
+		background-color: white;
 	}
 
 	#widget {
@@ -334,7 +312,6 @@
 		transform: translateX(var(--snapping-hint-x-pos))
 			translateY(var(--snapping-hint-y-pos));
 		background-color: #443443;
-		opacity: 0.3;
 	}
 
 	button#remove {
@@ -347,19 +324,8 @@
 		border: 2px solid white;
 		outline: none;
 		cursor: pointer;
-		& :hover {
+		&:hover {
 			background-color: red;
 		}
-	}
-
-	div#placeholder {
-		width: 100%;
-		height: 100%;
-	}
-
-	div#placeholder h4 {
-		margin: 0;
-		padding: 0;
-		text-align: center;
 	}
 </style>

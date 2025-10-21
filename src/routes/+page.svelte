@@ -1,66 +1,75 @@
 <script lang="ts">
-	import type { IWidget, IFuncs } from '$lib/tilgridlib/types/widget';
+	import type { ITilgridConfig } from '$lib/tilgridlib/types/config';
+	import type { IWidget } from '$lib/tilgridlib/types/widget';
+	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
+	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
+
+	let container = $state<HTMLDivElement>();
 
 	let widgets: IWidget[] = $state([
 		{
-			id: 0,
+			id: 'some_random_id_01',
 			x: 0,
 			y: 0,
 			w: 200,
-			h: 100
+			h: 100,
+			config: ''
 		},
 		{
-			id: 1,
+			id: 'some_random_id_02',
 			x: 200,
 			y: 100,
 			w: 200,
-			h: 150
+			h: 150,
+			config: ''
 		}
 	]);
 
-	function fetchWidgets() {
-		// For API GET
-	}
-
-	function updateWidgets() {
-		// For API UPDATE
-	}
-
-	/**
-	 * functions to run along the default behaviour
-	 * when a widget is added or deleted.
-	 *
-	 * If these arent present; the corresponding buttons \
-	 * won't be present either.
-	 */
-	const funcs: IFuncs = {
-		add: function () {
-			/*
-			 * NOTE:
-			 * Should IDs perhaps not be iterable?
-			 * Maybe randomize (UUID?) instead?
-			 */
-		},
-		remove: function (widget: Pick<IWidget, 'id'>) {
-			/*
-			 * NOTE:
-			 * Not efficient to replace the whole array, that has visual \
-			 * side-effect (weird movement shifting of un-affected widgets). \
-			 * Rewrite to modify only the original array.
-			 */
-			widgets = widgets.filter((w: IWidget) => w.id != widget.id);
+	const config: ITilgridConfig = $state({
+		width: '100%',
+		height: '100%',
+		editing: false,
+		snappingArea: 50,
+		snappingAnimTime: 200,
+		verticallyDynamic: false,
+		widgetInitialSize: { w: 300, h: 400 },
+		widgetSpace: 10,
+		funcs: {
+			remove: function (widget: Pick<IWidget, 'id'>) {
+				widgets = widgets.filter((w: IWidget) => w.id != widget.id);
+			}
 		}
-	};
+	});
+
+	function addNewWidget() {
+		let newPos = findAvailablePosition(
+			{ w: container!.clientWidth, h: container!.clientHeight },
+			{ w: 400, h: 300 },
+			config.snappingArea!,
+			widgets
+		);
+
+		widgets.push({
+			...config.widgetInitialSize!,
+			...newPos,
+			id: 'some_random_id_03',
+			config: ''
+		});
+	}
 </script>
 
-<div
-	style:background-color="lightgray"
-	style:width="1000px"
-	style:height="800px"
-	style:margin="50px"
->
-	<Tilgrid bind:widgets {funcs} />
+<button onclick={addNewWidget}>add</button>
+<button onclick={() => (config.editing = !config.editing)}>
+	editing: {config.editing ? 'on' : 'off'}
+</button>
+
+<div style:background-color="lightgray" style:width="100%" style:height="100%">
+	<Tilgrid bind:container bind:widgets {...config}>
+		{#snippet widget(widget: IWidget)}
+			<WidgetTestContent {widget} />
+		{/snippet}
+	</Tilgrid>
 </div>
 
 <style>

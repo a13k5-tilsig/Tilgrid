@@ -6,12 +6,11 @@
 
 	/*
 	 * TODO:
-	 * - [x] Add main ability of rendering passed children.
-	 * - [x] Add locked feature for locking widgets and hiding ability to delete the items.
+	 * + Add ability to stop widgets from moving out-of-bounds (container).
 	 *
 	 * + Add collision mechanism.
-	 * + Add ability to stop widgets from moving out-of-bounds (container).
 	 * + Add ability to make the widget container vertically dynamic.
+	 *
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.
 	 *
@@ -20,11 +19,6 @@
 	 *   When placing two widgets besides eachother (make them big for best visibility)
 	 *   and then delete the one to the left, for a second, the one to the right takes
 	 *   the place of the deleted one before shifting back to its own position again.
-	 * + When moving a widget and the cursor hovers over neighboring widgets;
-	 *   those widgets detect that as a mouseDown event.
-	 *   Fix by making it so that only one widget can be moved at a time, so when hovering
-	 *   a widget that isn't being moved, that widget won't act on the event.
-	 *   - This was fixed by making the z-index go above all other widgets, is that enough?
 	 */
 
 	let {

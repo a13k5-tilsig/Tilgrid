@@ -1,13 +1,12 @@
 <script lang="ts">
+	import type { ITilgridConfig } from '$lib/tilgridlib/types/config';
+	import type { IWidget } from '$lib/tilgridlib/types/widget';
 	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
-	import type { IWidget, IFuncs, ISize } from '$lib/tilgridlib/types/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
-
-	// test
 	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
-	import WidgetTestContent2 from '$lib/components/WidgetTestContent2.svelte';
 
-	// test widgets
+	let container = $state<HTMLDivElement>();
+
 	let widgets: IWidget[] = $state([
 		{
 			id: 'some_random_id_01',
@@ -27,59 +26,46 @@
 		}
 	]);
 
-	/**
-	 * functions to run along the default behaviour
-	 * when a widget is added or deleted.
-	 *
-	 * If these arent present; the corresponding buttons \
-	 * won't be present either.
-	 */
-	const funcs: IFuncs = {
-		remove: function (widget: Pick<IWidget, 'id'>) {
-			widgets = widgets.filter((w: IWidget) => w.id != widget.id);
+	const config: ITilgridConfig = $state({
+		width: '100%',
+		height: '100%',
+		editing: false,
+		snappingArea: 50,
+		snappingAnimTime: 200,
+		verticallyDynamic: false,
+		widgetInitialSize: { w: 300, h: 400 },
+		widgetSpace: 10,
+		funcs: {
+			remove: function (widget: Pick<IWidget, 'id'>) {
+				widgets = widgets.filter((w: IWidget) => w.id != widget.id);
+			}
 		}
-	};
-
-	const snappingArea = 50;
-	const widgetInitialSize: ISize = { w: 400, h: 300 };
-
-	let container = $state<HTMLDivElement>();
+	});
 
 	function addNewWidget() {
 		let newPos = findAvailablePosition(
-			{
-				w: container!.clientWidth,
-				h: container!.clientHeight
-			},
-			snappingArea,
-			{
-				w: 400,
-				h: 300
-			},
+			{ w: container!.clientWidth, h: container!.clientHeight },
+			{ w: 400, h: 300 },
+			config.snappingArea!,
 			widgets
 		);
 
 		widgets.push({
+			...config.widgetInitialSize!,
+			...newPos,
 			id: 'some_random_id_03',
-			x: newPos.x,
-			y: newPos.y,
-			w: widgetInitialSize.w,
-			h: widgetInitialSize.h,
 			config: ''
 		});
 	}
 </script>
 
 <button onclick={addNewWidget}>add</button>
+<button onclick={() => (config.editing = !config.editing)}>
+	editing: {config.editing ? 'on' : 'off'}
+</button>
 
 <div style:background-color="lightgray" style:width="100%" style:height="100%">
-	<Tilgrid
-		bind:container
-		bind:widgets
-		editing={false}
-		{funcs}
-		snappingArea={50}
-	>
+	<Tilgrid bind:container bind:widgets {...config}>
 		{#snippet widget(widget: IWidget)}
 			<WidgetTestContent {widget} />
 		{/snippet}

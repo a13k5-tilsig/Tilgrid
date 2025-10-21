@@ -109,8 +109,8 @@ function getMatrixCellCoordinatesFromWidgets(
  */
 export function findAvailablePosition(
 	containerSize: ISize,
-	snappingArea: number,
 	widgetSize: ISize,
+	snappingArea: number,
 	widgets: IWidget[]
 ): IPosition {
 	const containerMatrix = makeMatrix(

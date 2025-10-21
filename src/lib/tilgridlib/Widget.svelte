@@ -1,17 +1,16 @@
 <script lang="ts">
-	import type { IWidget, ISize, IPosition, IFuncs } from './types/widget';
-	import { type Snippet } from 'svelte';
+	import type { IPosition, ISize } from './types/widget';
+	import type { IWidgetConfig } from './types/config';
 	import XIcon from './XIcon.svelte';
 	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
 
 	/*
 	 * TODO:
 	 * - [x] Add main ability of rendering passed children.
+	 * - [x] Add locked feature for locking widgets and hiding ability to delete the items.
 	 *
-	 * + Add locked feature for locking widgets and hiding ability to delete the items.
 	 * + Add collision mechanism.
 	 * + Add ability to stop widgets from moving out-of-bounds (container).
-	 * + Add ability to scale the container horizontaly (for slimmer viewing) (how?).
 	 * + Add ability to make the widget container vertically dynamic.
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.
@@ -25,17 +24,8 @@
 	 *   those widgets detect that as a mouseDown event.
 	 *   Fix by making it so that only one widget can be moved at a time, so when hovering
 	 *   a widget that isn't being moved, that widget won't act on the event.
+	 *   - This was fixed by making the z-index go above all other widgets, is that enough?
 	 */
-
-	interface Props {
-		spec: IWidget;
-		moving: boolean;
-		resizing: boolean;
-		snappingArea: number;
-		snappingAnimTime: number;
-		funcs?: IFuncs;
-		children?: Snippet;
-	}
 
 	let {
 		spec = $bindable(),
@@ -43,9 +33,11 @@
 		resizing = $bindable(),
 		snappingArea,
 		snappingAnimTime,
+		editing,
+		widgetSpace,
 		funcs,
 		children
-	}: Props = $props();
+	}: IWidgetConfig = $props();
 
 	/**
 	 * The widget itself (the wrapper at least...).
@@ -70,20 +62,20 @@
 	 * this is only sensitive to spillover in the +X and +Y direction
 	 * maybe fix?.
 	 */
-	let snappingThreshold: number = $derived(snappingArea / 2);
+	let snappingThreshold: number = $derived(snappingArea! / 2);
 
 	/**
 	 * Round an axis position up to its closest snapping-area.
 	 */
 	function roundSpecUp(prop: 'x' | 'y' | 'w' | 'h'): number {
-		return Math.ceil(spec[prop] / snappingArea) * snappingArea;
+		return Math.ceil(spec[prop] / snappingArea!) * snappingArea!;
 	}
 
 	/**
 	 * Round an axis position down to its closest snapping-area.
 	 */
 	function roundSpecDown(prop: 'x' | 'y' | 'w' | 'h'): number {
-		return Math.floor(spec[prop] / snappingArea) * snappingArea;
+		return Math.floor(spec[prop] / snappingArea!) * snappingArea!;
 	}
 
 	/**
@@ -92,11 +84,11 @@
 	function adjustedPosition(position: IPosition): IPosition {
 		return {
 			x:
-				position.x % snappingArea > snappingThreshold
+				position.x % snappingArea! > snappingThreshold
 					? roundSpecUp('x')
 					: roundSpecDown('x'),
 			y:
-				position.y % snappingArea > snappingThreshold
+				position.y % snappingArea! > snappingThreshold
 					? roundSpecUp('y')
 					: roundSpecDown('y')
 		};
@@ -108,11 +100,11 @@
 	function adjustedSize(size: ISize): ISize {
 		return {
 			w:
-				size.w % snappingArea > snappingThreshold
+				size.w % snappingArea! > snappingThreshold
 					? roundSpecUp('w')
 					: roundSpecDown('w'),
 			h:
-				size.h % snappingArea > snappingThreshold
+				size.h % snappingArea! > snappingThreshold
 					? roundSpecUp('h')
 					: roundSpecDown('h')
 		};
@@ -151,6 +143,7 @@
 	const WIDGET = {
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
+				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
 				moving = true;
@@ -159,47 +152,47 @@
 				cursorElemAnchor.y = event.offsetY;
 			},
 			handleMouseUp: function (event: MouseEvent) {
+				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
 				elemIsMoving = false;
-
-				// Runs when the operation is complete.
 				funcs?.move?.({ id: spec.id });
 			},
 			handleMouseMove: function (event: MouseEvent) {
+				if (!moving || !editing || !elemIsMoving) return;
 				event.preventDefault();
 				event.stopPropagation();
-				if (!moving) return;
 				spec.x -= cursorElemAnchor.x - event.offsetX;
 				spec.y -= cursorElemAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
+				if (!moving || !editing || !elemIsMoving) return;
 				event.preventDefault();
-				// Set the last snapped position before stopping the operation.
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
+				elemIsMoving = false;
 			}
 		},
 		resize: {
 			handleMouseDown: function () {
+				if (!editing) return;
 				resizing = true;
 				elemIsMoving = true;
 			},
 			handleMouseUp: function () {
+				if (!resizing || !editing || !elemIsMoving) return;
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
 				elemIsMoving = false;
-
-				// Runs when the operation is complete.
-				funcs?.move?.({ id: spec.id });
+				funcs?.size?.({ id: spec.id });
 			},
 			handleMouseMove: function () {
-				if (!resizing) return;
+				if (!resizing || !editing || !elemIsMoving) return;
 				spec.w = elem!.clientWidth;
 				spec.h = elem!.clientHeight;
 			}
@@ -233,12 +226,14 @@
 	bind:this={elem}
 	class:on-top={elemIsMoving}
 	class:ease-snapping={!elemIsMoving}
+	class:editing
 	style:opacity={elemIsMoving ? '0.8' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
 	style="
 		--x-pos: {spec.x}px;
 		--y-pos: {spec.y}px;
+		--widget-space: {widgetSpace}px;
 		--transition-time: {snappingAnimTime}ms;
 	"
 	onmousedown={WIDGET.resize.handleMouseDown}
@@ -249,7 +244,7 @@
 		only appears if a remove-function is provided by the component
 		hosting the Tilgrid main component.
 	-->
-	{#if !!funcs?.remove}
+	{#if !!funcs?.remove && editing}
 		<button
 			id="remove"
 			class="center-content"
@@ -263,7 +258,7 @@
 	<div
 		id="widget"
 		role="none"
-		style:cursor={moving ? 'grabbing' : 'grab'}
+		style:cursor={!editing ? 'auto' : moving ? 'grabbing' : 'grab'}
 		onmousedown={WIDGET.move.handleMouseDown}
 		onmouseup={WIDGET.move.handleMouseUp}
 		onmousemove={WIDGET.move.handleMouseMove}
@@ -272,13 +267,7 @@
 		{#if !!children}
 			{@render children()}
 		{:else}
-			<WidgetPlaceholder
-				id={spec.id}
-				w={spec.w}
-				h={spec.h}
-				x={spec.x}
-				y={spec.y}
-			/>
+			<WidgetPlaceholder {...spec} />
 		{/if}
 	</div>
 </div>
@@ -307,12 +296,15 @@
 
 	#widget-wrapper {
 		transform: translateX(var(--x-pos)) translateY(var(--y-pos));
-		padding: 10px;
-		background-color: white;
+		padding: var(--widget-space);
 		box-sizing: border-box;
 		overflow: auto;
-		resize: both;
 		transition: opacity var(--transition-time) ease-in-out;
+	}
+
+	#widget-wrapper.editing {
+		resize: both;
+		background-color: white;
 	}
 
 	#widget {

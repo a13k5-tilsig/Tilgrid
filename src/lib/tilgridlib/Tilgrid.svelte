@@ -1,46 +1,47 @@
 <script lang="ts">
-	import type { Component, Snippet } from 'svelte';
-	import type { IFuncs, IWidget } from './types/widget.ts';
+	import type { ITilgridConfig } from './types/config.ts';
+	import type { IWidget, IFuncs } from './types/widget';
+	import type { Snippet } from 'svelte';
 	import Widget from './Widget.svelte';
 
-	const DEFAULT_WIDTH: string = '100%'; // css size
-	const DEFAULT_HEIGHT: string = '100%'; // css size
-	const DEFAULT_SNAPPING_AREA: number = 50; // px
-	const DEFAULT_SNAPPING_ANIM: number = 200; // ms
-
-	interface Props {
+	interface Props extends ITilgridConfig {
 		container: HTMLDivElement | undefined;
 		widgets: IWidget[];
 		widget: Snippet<[IWidget]>;
-		width?: string;
-		height?: string;
-		snappingArea?: number;
-		snappingAnimTime?: number;
-		editing?: boolean;
-		verticallyDynamic?: boolean;
 		funcs?: IFuncs;
 	}
+
+	const DEFAULT: ITilgridConfig = {
+		width: '100%', // css size
+		height: '100%', // css size
+		editing: true,
+		snappingArea: 50, // px
+		snappingAnimTime: 200, // ms
+		verticallyDynamic: true,
+		widgetInitialSize: { w: 300, h: 200 },
+		widgetSpace: 5
+	};
 
 	let {
 		container = $bindable(),
 		widgets = $bindable(),
 		widget,
-		width = DEFAULT_WIDTH,
-		height = DEFAULT_HEIGHT,
-		snappingArea = DEFAULT_SNAPPING_AREA,
-		snappingAnimTime = DEFAULT_SNAPPING_ANIM,
-		editing = true,
-		verticallyDynamic = true,
+		width = DEFAULT.width,
+		height = DEFAULT.height,
+		editing = DEFAULT.editing,
+		snappingArea = DEFAULT.snappingArea,
+		snappingAnimTime = DEFAULT.snappingAnimTime,
+		verticallyDynamic = DEFAULT.verticallyDynamic,
+		widgetInitialSize = DEFAULT.widgetInitialSize,
+		widgetSpace = DEFAULT.widgetSpace,
 		funcs
 	}: Props = $props();
 
-	/**
-	 * Fix the alignment of the snapping-points to start from 0.0.
-	 */
-	let alignSnappingGrid: string = $derived((snappingArea / 2).toFixed());
-
 	let moving: boolean = $state(false);
 	let resizing: boolean = $state(false);
+
+	// Fixes the alignment of the snapping-points to start from 0.0.
+	let alignSnappingGrid: string = $derived((snappingArea! / 2).toFixed());
 </script>
 
 <div
@@ -60,6 +61,8 @@
 			bind:resizing
 			{snappingArea}
 			{snappingAnimTime}
+			{editing}
+			{widgetSpace}
 			{funcs}
 		>
 			{@render widget?.(w)}

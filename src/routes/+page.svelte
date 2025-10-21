@@ -4,9 +4,10 @@
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 
 	// test
-	import WidgetTestContent from '$lib/tilgridlib/WidgetTestContent.svelte';
-	import WidgetTestContent2 from '$lib/tilgridlib/WidgetTestContent2.svelte';
+	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
+	import WidgetTestContent2 from '$lib/components/WidgetTestContent2.svelte';
 
+	// test widgets
 	let widgets: IWidget[] = $state([
 		{
 			id: 'some_random_id_01',

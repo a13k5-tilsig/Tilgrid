@@ -1,29 +1,28 @@
 <script lang="ts">
 	import type { ITilgridConfig } from './types/config.ts';
-	import type { IWidget, IFuncs } from './types/widget';
+	import type { IWidget, ISize, IFuncs } from './types/widget';
 	import type { Snippet } from 'svelte';
 	import Widget from './Widget.svelte';
 
+	const DEFAULT: ITilgridConfig = {
+		width: '100%',
+		height: '100%',
+		editing: true,
+		snappingArea: 50,
+		snappingAnimTime: 200,
+		horizontallyDynamic: true,
+		widgetSpace: 5
+	};
+
 	interface Props extends ITilgridConfig {
-		container: HTMLDivElement | undefined;
+		containerSize: ISize;
 		widgets: IWidget[];
 		widget: Snippet<[IWidget]>;
 		funcs?: IFuncs;
 	}
 
-	const DEFAULT: ITilgridConfig = {
-		width: '100%', // css size
-		height: '100%', // css size
-		editing: true,
-		snappingArea: 50, // px
-		snappingAnimTime: 200, // ms
-		verticallyDynamic: true,
-		widgetInitialSize: { w: 300, h: 200 },
-		widgetSpace: 5
-	};
-
 	let {
-		container = $bindable(),
+		containerSize = $bindable(),
 		widgets = $bindable(),
 		widget,
 		width = DEFAULT.width,
@@ -31,8 +30,7 @@
 		editing = DEFAULT.editing,
 		snappingArea = DEFAULT.snappingArea,
 		snappingAnimTime = DEFAULT.snappingAnimTime,
-		verticallyDynamic = DEFAULT.verticallyDynamic,
-		widgetInitialSize = DEFAULT.widgetInitialSize,
+		horizontallyDynamic = DEFAULT.horizontallyDynamic,
 		widgetSpace = DEFAULT.widgetSpace,
 		funcs
 	}: Props = $props();
@@ -40,25 +38,28 @@
 	let moving: boolean = $state(false);
 	let resizing: boolean = $state(false);
 
-	// Fixes the alignment of the snapping-points to start from 0.0.
-	let alignSnappingGrid: string = $derived((snappingArea! / 2).toFixed());
+	let fixSnappingGridAlignment: string = $derived(
+		(snappingArea! / 2).toFixed()
+	);
 </script>
 
 <div
-	bind:this={container}
-	class:snapp-hints={moving || resizing}
+	bind:clientWidth={containerSize.w}
+	bind:clientHeight={containerSize.h}
+	class:snapp-hints={editing || moving || resizing}
 	style:width
 	style:height
 	style="
 		--snapping-area: {snappingArea}px;
-		--snapping-align-comp: {alignSnappingGrid}px;
+		--snapping-grid-alignment-fix: {fixSnappingGridAlignment}px;
 	"
 >
-	{#each widgets as w, i}
+	{#each widgets as w, i (w.id)}
 		<Widget
 			bind:spec={widgets[i]}
 			bind:moving
 			bind:resizing
+			{containerSize}
 			{snappingArea}
 			{snappingAnimTime}
 			{editing}
@@ -74,6 +75,7 @@
 	.snapp-hints {
 		background-image: radial-gradient(black 1px, transparent 0);
 		background-size: var(--snapping-area) var(--snapping-area);
-		background-position: var(--snapping-align-comp) var(--snapping-align-comp);
+		background-position: var(--snapping-grid-alignment-fix)
+			var(--snapping-grid-alignment-fix);
 	}
 </style>

@@ -1,30 +1,24 @@
 <script lang="ts">
-	import type { IPosition, ISize } from './types/widget';
+	import type { IPosition, ISize, IWidget } from './types/widget';
 	import type { IWidgetConfig } from './types/config';
 	import XIcon from './XIcon.svelte';
 	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
 
 	/*
 	 * TODO:
-	 * + Add ability to stop widgets from moving out-of-bounds (container).
-	 *
+	 * + Mask widget content when editing.
 	 * + Add collision mechanism.
 	 * + Add ability to make the widget container vertically dynamic.
 	 *
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.
-	 *
-	 * FIX:
-	 * + Some Svelte array re-indexing funk, not necessarily a bug;
-	 *   When placing two widgets besides eachother (make them big for best visibility)
-	 *   and then delete the one to the left, for a second, the one to the right takes
-	 *   the place of the deleted one before shifting back to its own position again.
 	 */
 
 	let {
 		spec = $bindable(),
 		moving = $bindable(),
 		resizing = $bindable(),
+		containerSize,
 		snappingArea,
 		snappingAnimTime,
 		editing,
@@ -33,81 +27,83 @@
 		children
 	}: IWidgetConfig = $props();
 
-	/**
-	 * The widget itself (the wrapper at least...).
-	 */
-	let elem = $state<HTMLDivElement>();
+	let widgetSize: ISize = $state({ w: 0, h: 0 });
+	let editingWidget: boolean = $state(false);
+	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
 
-	/**
-	 * State to be observed if this element is moving.
-	 */
-	let elemIsMoving: boolean = $state(false);
+	let lastSuggestedSnapp: IPosition & ISize = {
+		x: spec.x,
+		y: spec.y,
+		w: spec.w,
+		h: spec.h
+	};
 
-	/**
-	 * Where the cursor anchors on the element, for precise movement.
-	 */
-	let cursorElemAnchor: IPosition = $state({ x: 0, y: 0 });
+	let snappableContainerSize: ISize = $derived({
+		w: Math.floor(containerSize.w / snappingArea!) * snappingArea!,
+		h: Math.floor(containerSize.h / snappingArea!) * snappingArea!
+	});
 
-	/**
-	 * How much a widgets spills into a new area before
-	 * snapp-suggesting the new position.
-	 *
-	 * Note:
-	 * this is only sensitive to spillover in the +X and +Y direction
-	 * maybe fix?.
-	 */
 	let snappingThreshold: number = $derived(snappingArea! / 2);
 
-	/**
-	 * Round an axis position up to its closest snapping-area.
-	 */
-	function roundSpecUp(prop: 'x' | 'y' | 'w' | 'h'): number {
-		return Math.ceil(spec[prop] / snappingArea!) * snappingArea!;
+	function roundSpec(
+		direction: 'up' | 'down',
+		prop: 'x' | 'y' | 'w' | 'h'
+	): number {
+		let specCopy = { ...spec };
+		specCopy[prop] =
+			direction == 'up'
+				? Math.ceil(spec[prop] / snappingArea!) * snappingArea!
+				: Math.floor(spec[prop] / snappingArea!) * snappingArea!;
+		if (specIsOutOfBounds(specCopy)) {
+			return lastSuggestedSnapp[prop];
+		} else {
+			lastSuggestedSnapp[prop] = specCopy[prop];
+			return specCopy[prop];
+		}
 	}
 
-	/**
-	 * Round an axis position down to its closest snapping-area.
-	 */
-	function roundSpecDown(prop: 'x' | 'y' | 'w' | 'h'): number {
-		return Math.floor(spec[prop] / snappingArea!) * snappingArea!;
+	function specIsOutOfBounds(suggestedSpec: IWidget): boolean {
+		if (
+			// Check X axis
+			suggestedSpec.x + suggestedSpec.w > snappableContainerSize.w ||
+			suggestedSpec.x < 0 ||
+			// Check Y axis
+			suggestedSpec.y + suggestedSpec.h > snappableContainerSize.h ||
+			suggestedSpec.y < 0
+		) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
-	/**
-	 * Adjust the position of the widget to match the snapping-area.
-	 */
 	function adjustedPosition(position: IPosition): IPosition {
 		return {
 			x:
 				position.x % snappingArea! > snappingThreshold
-					? roundSpecUp('x')
-					: roundSpecDown('x'),
+					? roundSpec('up', 'x')
+					: roundSpec('down', 'x'),
 			y:
 				position.y % snappingArea! > snappingThreshold
-					? roundSpecUp('y')
-					: roundSpecDown('y')
+					? roundSpec('up', 'y')
+					: roundSpec('down', 'y')
 		};
 	}
 
-	/**
-	 * Adjust the size of the widget to match the snapping-area.
-	 */
+	// TODO: Can make this cover for adjustPosition aswell, need some type trickery...
 	function adjustedSize(size: ISize): ISize {
 		return {
 			w:
 				size.w % snappingArea! > snappingThreshold
-					? roundSpecUp('w')
-					: roundSpecDown('w'),
+					? roundSpec('up', 'w')
+					: roundSpec('down', 'w'),
 			h:
 				size.h % snappingArea! > snappingThreshold
-					? roundSpecUp('h')
-					: roundSpecDown('h')
+					? roundSpec('up', 'h')
+					: roundSpec('up', 'h')
 		};
 	}
 
-	/**
-	 * The shadow (or ghost, if you will) that hints at the area where the
-	 * widget will snapp to if you were to let go of the widget.
-	 */
 	const snappingHint = $derived.by(() => {
 		if (moving) {
 			return {
@@ -131,9 +127,6 @@
 		}
 	});
 
-	/**
-	 * Widget mouse-event handlers.
-	 */
 	const WIDGET = {
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
@@ -141,9 +134,9 @@
 				event.preventDefault();
 				event.stopPropagation();
 				moving = true;
-				elemIsMoving = true;
-				cursorElemAnchor.x = event.offsetX;
-				cursorElemAnchor.y = event.offsetY;
+				editingWidget = true;
+				cursorWidgetAnchor.x = event.offsetX;
+				cursorWidgetAnchor.y = event.offsetY;
 			},
 			handleMouseUp: function (event: MouseEvent) {
 				if (!editing) return;
@@ -152,49 +145,48 @@
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
-				elemIsMoving = false;
+				editingWidget = false;
 				funcs?.move?.({ id: spec.id });
 			},
 			handleMouseMove: function (event: MouseEvent) {
-				if (!moving || !editing || !elemIsMoving) return;
+				if (!moving || !editing || !editingWidget) return;
 				event.preventDefault();
 				event.stopPropagation();
-				spec.x -= cursorElemAnchor.x - event.offsetX;
-				spec.y -= cursorElemAnchor.y - event.offsetY;
+				spec.x -= cursorWidgetAnchor.x - event.offsetX;
+				spec.y -= cursorWidgetAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
-				if (!moving || !editing || !elemIsMoving) return;
+				if (!moving || !editing || !editingWidget) return;
 				event.preventDefault();
 				spec.x = snappingHint.x;
 				spec.y = snappingHint.y;
 				moving = false;
-				elemIsMoving = false;
+				editingWidget = false;
 			}
 		},
 		resize: {
 			handleMouseDown: function () {
 				if (!editing) return;
 				resizing = true;
-				elemIsMoving = true;
+				editingWidget = true;
 			},
 			handleMouseUp: function () {
-				if (!resizing || !editing || !elemIsMoving) return;
+				if (!resizing || !editing || !editingWidget) return;
 				spec.w = snappingHint.w;
 				spec.h = snappingHint.h;
 				resizing = false;
-				elemIsMoving = false;
+				editingWidget = false;
 				funcs?.size?.({ id: spec.id });
 			},
 			handleMouseMove: function () {
-				if (!resizing || !editing || !elemIsMoving) return;
-				spec.w = elem!.clientWidth;
-				spec.h = elem!.clientHeight;
+				if (!resizing || !editing || !editingWidget) return;
+				spec.w = widgetSize.w;
+				spec.h = widgetSize.h;
 			}
 		},
 		remove: function (event: MouseEvent) {
 			event.preventDefault();
 			event.stopPropagation();
-			// Runs immediately.
 			funcs?.remove?.({ id: spec.id });
 		}
 	};
@@ -203,10 +195,10 @@
 <div
 	id="snapping-hint"
 	class="ease-snapping"
-	class:on-top={elemIsMoving}
+	class:on-top={editingWidget}
 	style:width="{snappingHint.w}px"
 	style:height="{snappingHint.h}px"
-	style:opacity={elemIsMoving ? 0.4 : 0}
+	style:opacity={editingWidget ? 0.4 : 0}
 	style="
 		--snapping-hint-x-pos: {snappingHint.x}px;
 		--snapping-hint-y-pos: {snappingHint.y}px;
@@ -217,11 +209,12 @@
 <div
 	id="widget-wrapper"
 	role="none"
-	bind:this={elem}
-	class:on-top={elemIsMoving}
-	class:ease-snapping={!elemIsMoving}
+	bind:clientWidth={widgetSize.w}
+	bind:clientHeight={widgetSize.h}
+	class:on-top={editingWidget}
+	class:ease-snapping={!editingWidget}
 	class:editing
-	style:opacity={elemIsMoving ? '0.8' : '1'}
+	style:opacity={editingWidget ? '0.8' : '1'}
 	style:width="{spec.w}px"
 	style:height="{spec.h}px"
 	style="

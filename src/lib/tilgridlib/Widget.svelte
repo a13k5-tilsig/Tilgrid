@@ -43,23 +43,23 @@
 	const adjustedPosition = (position: IPosition): IPosition => ({
 		x:
 			position.x % snappingArea! > snappingThreshold
-				? roundSpec('up', 'x')
-				: roundSpec('down', 'x'),
+				? roundWidgetSpec('up', 'x')
+				: roundWidgetSpec('down', 'x'),
 		y:
 			position.y % snappingArea! > snappingThreshold
-				? roundSpec('up', 'y')
-				: roundSpec('down', 'y')
+				? roundWidgetSpec('up', 'y')
+				: roundWidgetSpec('down', 'y')
 	});
 
 	const adjustedSize = (size: ISize): ISize => ({
 		width:
 			size.width % snappingArea! > snappingThreshold
-				? roundSpec('up', 'width')
-				: roundSpec('down', 'width'),
+				? roundWidgetSpec('up', 'width')
+				: roundWidgetSpec('down', 'width'),
 		height:
 			size.height % snappingArea! > snappingThreshold
-				? roundSpec('up', 'height')
-				: roundSpec('down', 'height')
+				? roundWidgetSpec('up', 'height')
+				: roundWidgetSpec('down', 'height')
 	});
 
 	const snappingHint: ISize & IPosition = $derived.by(() => {
@@ -150,7 +150,7 @@
 		}
 	};
 
-	function roundSpec(
+	function roundWidgetSpec(
 		direction: 'up' | 'down',
 		prop: 'x' | 'y' | 'width' | 'height'
 	): number {

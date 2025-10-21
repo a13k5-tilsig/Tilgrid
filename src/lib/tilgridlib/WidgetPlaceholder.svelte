@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { IWidget } from './types/widget';
 
-	let { id, w, h, x, y }: IWidget = $props();
+	let { id, width, height, x, y }: IWidget = $props();
 </script>
 
 <!--
@@ -24,12 +24,12 @@
 		<br />
 		Width:
 		<span style:float="right" style:margin-left="10px">
-			{w}px
+			{width}px
 		</span>
 		<br />
 		Height:
 		<span style:float="right" style:margin-left="10px">
-			{h}px
+			{height}px
 		</span>
 		<br />
 		Position from top:

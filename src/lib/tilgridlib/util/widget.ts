@@ -73,8 +73,8 @@ function getMatrixCellCoordinatesFromWidgets(
 ): number[][] {
 	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
-		let widgetMatrixCellHeight = fromPxToMatrixCells(w.h, matrixCellSize);
-		let widgetMatrixCellWidth = fromPxToMatrixCells(w.w, matrixCellSize);
+		let widgetMatrixCellHeight = fromPxToMatrixCells(w.height, matrixCellSize);
+		let widgetMatrixCellWidth = fromPxToMatrixCells(w.width, matrixCellSize);
 		let widgetMatrixPositionFromTop = fromPxToMatrixCells(w.y, matrixCellSize);
 		let widgetMatrixPositionFromLeft = fromPxToMatrixCells(w.x, matrixCellSize);
 
@@ -114,13 +114,13 @@ export function findAvailablePosition(
 	widgets: IWidget[]
 ): IPosition {
 	const containerMatrix = makeMatrix(
-		fromPxToMatrixCells(containerSize.h, snappingArea),
-		fromPxToMatrixCells(containerSize.w, snappingArea)
+		fromPxToMatrixCells(containerSize.height, snappingArea),
+		fromPxToMatrixCells(containerSize.width, snappingArea)
 	);
 
 	const widgetMatrix = makeMatrix(
-		fromPxToMatrixCells(widgetSize.h, snappingArea),
-		fromPxToMatrixCells(widgetSize.w, snappingArea)
+		fromPxToMatrixCells(widgetSize.height, snappingArea),
+		fromPxToMatrixCells(widgetSize.width, snappingArea)
 	);
 
 	// To be used for finding matching matrix in the container matrix.

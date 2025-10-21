@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import type { IWidget } from './types/widget';
+	import type { IWidget } from '../tilgridlib/types/widget.ts';
 
 	interface Props {
 		widget: IWidget;
@@ -12,5 +11,5 @@
 <div style="width: 100%; height: 100%; background-color: red;">
 	Component!<br />
 	id: {widget.id}
-	h: {widget.h}
+	h: {widget.height}
 </div>

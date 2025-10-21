@@ -11,5 +11,5 @@
 <div style="width: 100%; height: 100%; background-color: orange;">
 	Component!<br />
 	id: {widget.id}<br />
-	h: {widget.h}
+	h: {widget.height}
 </div>

@@ -4,8 +4,8 @@ export interface IPosition {
 }
 
 export interface ISize {
-	w: number;
-	h: number;
+	width: number;
+	height: number;
 }
 
 /**
@@ -23,8 +23,8 @@ export interface IWidget extends IPosition, ISize {
  * size? - Runs after a widget is resized inside the container.
  */
 export interface IFuncs {
-	add?: () => void;
-	remove?: (id: Pick<IWidget, 'id'>) => void;
-	move?: (id: Pick<IWidget, 'id'>) => void;
-	size?: (id: Pick<IWidget, 'id'>) => void;
+	onWidgetAdd?: (id?: string) => void;
+	onWidgetRemove?: (id?: string) => void;
+	onWidgetMove?: (id?: string) => void;
+	onWidgetResize?: (id?: string) => void;
 }

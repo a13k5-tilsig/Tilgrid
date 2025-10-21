@@ -1,11 +1,11 @@
 import type { IWidget, ISize, IFuncs } from './widget';
 import type { Snippet } from 'svelte';
 
-export interface ITilgridConfig {
-	// CSS width size (default: 100%).
+export interface IContainerConfig {
+	// CSS width (default: 100%).
 	width?: string;
 
-	// CSS height size (default: 100%).
+	// CSS height (default: 100%).
 	height?: string;
 
 	// Is the container in 'editing' mode?
@@ -30,11 +30,11 @@ export interface ITilgridConfig {
 
 export interface IWidgetConfig
 	extends Pick<
-		ITilgridConfig,
+		IContainerConfig,
 		'snappingArea' | 'snappingAnimTime' | 'editing' | 'widgetSpace' | 'funcs'
 	> {
 	// The id, position (x, y) and size (w, h) of a single widget.
-	spec: IWidget;
+	widget: IWidget;
 
 	// (bound property) Is the widgets being moved?
 	moving: boolean;

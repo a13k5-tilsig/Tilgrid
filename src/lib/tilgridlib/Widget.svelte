@@ -6,7 +6,7 @@
 
 	/*
 	 * TODO:
-	 * + Mask widget content when editing.
+	 * + Mask widget content when editing to avoid accidental clicks.
 	 * + Add collision mechanism.
 	 * + Add ability to make the widget container vertically dynamic.
 	 *
@@ -15,7 +15,7 @@
 	 */
 
 	let {
-		spec = $bindable(),
+		widget = $bindable(),
 		moving = $bindable(),
 		resizing = $bindable(),
 		containerSize,
@@ -27,102 +27,87 @@
 		children
 	}: IWidgetConfig = $props();
 
-	let widgetSize: ISize = $state({ w: 0, h: 0 });
+	let widgetSize: ISize = $state({ width: 0, height: 0 });
 	let editingWidget: boolean = $state(false);
 	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
+	let snappingThreshold: number = $derived(snappingArea! / 2);
 
 	let lastSuggestedSnapp: IPosition & ISize = {
-		x: spec.x,
-		y: spec.y,
-		w: spec.w,
-		h: spec.h
+		x: widget.x,
+		y: widget.y,
+		width: widget.width,
+		height: widget.height
 	};
 
 	let snappableContainerSize: ISize = $derived({
-		w: Math.floor(containerSize.w / snappingArea!) * snappingArea!,
-		h: Math.floor(containerSize.h / snappingArea!) * snappingArea!
+		width: Math.floor(containerSize.width / snappingArea!) * snappingArea!,
+		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
 
-	let snappingThreshold: number = $derived(snappingArea! / 2);
+	const widgetIsOutOfBounds = (suggestedSpec: IWidget): boolean =>
+		suggestedSpec.x + suggestedSpec.width > snappableContainerSize.width ||
+		suggestedSpec.y + suggestedSpec.height > snappableContainerSize.height ||
+		suggestedSpec.x < 0 ||
+		suggestedSpec.y < 0;
 
 	function roundSpec(
 		direction: 'up' | 'down',
-		prop: 'x' | 'y' | 'w' | 'h'
+		prop: 'x' | 'y' | 'width' | 'height'
 	): number {
-		let specCopy = { ...spec };
-		specCopy[prop] =
+		let widgetCopy = { ...widget };
+		widgetCopy[prop] =
 			direction == 'up'
-				? Math.ceil(spec[prop] / snappingArea!) * snappingArea!
-				: Math.floor(spec[prop] / snappingArea!) * snappingArea!;
-		if (specIsOutOfBounds(specCopy)) {
+				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
+				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
+		if (widgetIsOutOfBounds(widgetCopy)) {
 			return lastSuggestedSnapp[prop];
 		} else {
-			lastSuggestedSnapp[prop] = specCopy[prop];
-			return specCopy[prop];
+			lastSuggestedSnapp[prop] = widgetCopy[prop];
+			return widgetCopy[prop];
 		}
 	}
 
-	function specIsOutOfBounds(suggestedSpec: IWidget): boolean {
-		if (
-			// Check X axis
-			suggestedSpec.x + suggestedSpec.w > snappableContainerSize.w ||
-			suggestedSpec.x < 0 ||
-			// Check Y axis
-			suggestedSpec.y + suggestedSpec.h > snappableContainerSize.h ||
-			suggestedSpec.y < 0
-		) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+	const adjustedPosition = (position: IPosition): IPosition => ({
+		x:
+			position.x % snappingArea! > snappingThreshold
+				? roundSpec('up', 'x')
+				: roundSpec('down', 'x'),
+		y:
+			position.y % snappingArea! > snappingThreshold
+				? roundSpec('up', 'y')
+				: roundSpec('down', 'y')
+	});
 
-	function adjustedPosition(position: IPosition): IPosition {
-		return {
-			x:
-				position.x % snappingArea! > snappingThreshold
-					? roundSpec('up', 'x')
-					: roundSpec('down', 'x'),
-			y:
-				position.y % snappingArea! > snappingThreshold
-					? roundSpec('up', 'y')
-					: roundSpec('down', 'y')
-		};
-	}
+	const adjustedSize = (size: ISize): ISize => ({
+		width:
+			size.width % snappingArea! > snappingThreshold
+				? roundSpec('up', 'width')
+				: roundSpec('down', 'width'),
+		height:
+			size.height % snappingArea! > snappingThreshold
+				? roundSpec('up', 'height')
+				: roundSpec('down', 'height')
+	});
 
-	// TODO: Can make this cover for adjustPosition aswell, need some type trickery...
-	function adjustedSize(size: ISize): ISize {
-		return {
-			w:
-				size.w % snappingArea! > snappingThreshold
-					? roundSpec('up', 'w')
-					: roundSpec('down', 'w'),
-			h:
-				size.h % snappingArea! > snappingThreshold
-					? roundSpec('up', 'h')
-					: roundSpec('up', 'h')
-		};
-	}
-
-	const snappingHint = $derived.by(() => {
+	const snappingHint: ISize & IPosition = $derived.by(() => {
 		if (moving) {
 			return {
-				...adjustedPosition({ x: spec.x, y: spec.y }),
-				w: spec.w,
-				h: spec.h
+				...adjustedPosition({ x: widget.x, y: widget.y }),
+				width: widget.width,
+				height: widget.height
 			};
 		} else if (resizing) {
 			return {
-				...adjustedSize({ w: spec.w, h: spec.h }),
-				x: spec.x,
-				y: spec.y
+				...adjustedSize({ width: widget.width, height: widget.height }),
+				x: widget.x,
+				y: widget.y
 			};
 		} else {
 			return {
-				x: spec.x,
-				y: spec.y,
-				w: spec.w,
-				h: spec.h
+				x: widget.x,
+				y: widget.y,
+				width: widget.width,
+				height: widget.height
 			};
 		}
 	});
@@ -142,24 +127,24 @@
 				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
-				spec.x = snappingHint.x;
-				spec.y = snappingHint.y;
+				widget.x = snappingHint.x;
+				widget.y = snappingHint.y;
 				moving = false;
 				editingWidget = false;
-				funcs?.move?.({ id: spec.id });
+				funcs?.onWidgetMove?.(widget.id);
 			},
 			handleMouseMove: function (event: MouseEvent) {
 				if (!moving || !editing || !editingWidget) return;
 				event.preventDefault();
 				event.stopPropagation();
-				spec.x -= cursorWidgetAnchor.x - event.offsetX;
-				spec.y -= cursorWidgetAnchor.y - event.offsetY;
+				widget.x -= cursorWidgetAnchor.x - event.offsetX;
+				widget.y -= cursorWidgetAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
 				if (!moving || !editing || !editingWidget) return;
 				event.preventDefault();
-				spec.x = snappingHint.x;
-				spec.y = snappingHint.y;
+				widget.x = snappingHint.x;
+				widget.y = snappingHint.y;
 				moving = false;
 				editingWidget = false;
 			}
@@ -172,22 +157,22 @@
 			},
 			handleMouseUp: function () {
 				if (!resizing || !editing || !editingWidget) return;
-				spec.w = snappingHint.w;
-				spec.h = snappingHint.h;
+				widget.width = snappingHint.width;
+				widget.height = snappingHint.height;
 				resizing = false;
 				editingWidget = false;
-				funcs?.size?.({ id: spec.id });
+				funcs?.onWidgetResize?.(widget.id);
 			},
 			handleMouseMove: function () {
 				if (!resizing || !editing || !editingWidget) return;
-				spec.w = widgetSize.w;
-				spec.h = widgetSize.h;
+				widget.width = widgetSize.width;
+				widget.height = widgetSize.height;
 			}
 		},
 		remove: function (event: MouseEvent) {
 			event.preventDefault();
 			event.stopPropagation();
-			funcs?.remove?.({ id: spec.id });
+			funcs?.onWidgetRemove?.(widget.id);
 		}
 	};
 </script>
@@ -196,8 +181,8 @@
 	id="snapping-hint"
 	class="ease-snapping"
 	class:on-top={editingWidget}
-	style:width="{snappingHint.w}px"
-	style:height="{snappingHint.h}px"
+	style:width="{snappingHint.width}px"
+	style:height="{snappingHint.height}px"
 	style:opacity={editingWidget ? 0.4 : 0}
 	style="
 		--snapping-hint-x-pos: {snappingHint.x}px;
@@ -209,17 +194,17 @@
 <div
 	id="widget-wrapper"
 	role="none"
-	bind:clientWidth={widgetSize.w}
-	bind:clientHeight={widgetSize.h}
+	bind:clientWidth={widgetSize.width}
+	bind:clientHeight={widgetSize.height}
 	class:on-top={editingWidget}
 	class:ease-snapping={!editingWidget}
 	class:editing
 	style:opacity={editingWidget ? '0.8' : '1'}
-	style:width="{spec.w}px"
-	style:height="{spec.h}px"
+	style:width="{widget.width}px"
+	style:height="{widget.height}px"
 	style="
-		--x-pos: {spec.x}px;
-		--y-pos: {spec.y}px;
+		--x-pos: {widget.x}px;
+		--y-pos: {widget.y}px;
 		--widget-space: {widgetSpace}px;
 		--transition-time: {snappingAnimTime}ms;
 	"
@@ -227,11 +212,7 @@
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
 >
-	<!--
-		only appears if a remove-function is provided by the component
-		hosting the Tilgrid main component.
-	-->
-	{#if !!funcs?.remove && editing}
+	{#if !!funcs?.onWidgetRemove && editing}
 		<button
 			id="remove"
 			class="center-content"
@@ -254,7 +235,7 @@
 		{#if !!children}
 			{@render children()}
 		{:else}
-			<WidgetPlaceholder {...spec} />
+			<WidgetPlaceholder {...widget} />
 		{/if}
 	</div>
 </div>

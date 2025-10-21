@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { ITilgridConfig } from './types/config.ts';
+	import type { IContainerConfig } from './types/config.ts';
 	import type { IWidget, ISize, IFuncs } from './types/widget';
 	import type { Snippet } from 'svelte';
 	import Widget from './Widget.svelte';
 
-	const DEFAULT: ITilgridConfig = {
+	const DEFAULT: IContainerConfig = {
 		width: '100%',
 		height: '100%',
 		editing: true,
@@ -14,7 +14,7 @@
 		widgetSpace: 5
 	};
 
-	interface Props extends ITilgridConfig {
+	interface Props extends IContainerConfig {
 		containerSize: ISize;
 		widgets: IWidget[];
 		widget: Snippet<[IWidget]>;
@@ -44,19 +44,19 @@
 </script>
 
 <div
-	bind:clientWidth={containerSize.w}
-	bind:clientHeight={containerSize.h}
+	bind:clientWidth={containerSize.width}
+	bind:clientHeight={containerSize.height}
 	class:snapp-hints={editing || moving || resizing}
 	style:width
 	style:height
 	style="
 		--snapping-area: {snappingArea}px;
-		--snapping-grid-alignment-fix: {fixSnappingGridAlignment}px;
+		--fix-snapping-grid-elignment: {fixSnappingGridAlignment}px;
 	"
 >
 	{#each widgets as w, i (w.id)}
 		<Widget
-			bind:spec={widgets[i]}
+			bind:widget={widgets[i]}
 			bind:moving
 			bind:resizing
 			{containerSize}
@@ -75,7 +75,7 @@
 	.snapp-hints {
 		background-image: radial-gradient(black 1px, transparent 0);
 		background-size: var(--snapping-area) var(--snapping-area);
-		background-position: var(--snapping-grid-alignment-fix)
-			var(--snapping-grid-alignment-fix);
+		background-position: var(--fix-snapping-grid-elignment)
+			var(--fix-snapping-grid-elignment);
 	}
 </style>

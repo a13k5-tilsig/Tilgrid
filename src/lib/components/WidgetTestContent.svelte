@@ -12,4 +12,5 @@
 	Component!<br />
 	id: {widget.id}<br />
 	h: {widget.height}
+	<button onclick={() => console.log('OK')}>bubbling test</button>
 </div>

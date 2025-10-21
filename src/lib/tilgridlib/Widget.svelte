@@ -27,19 +27,9 @@
 		children
 	}: IWidgetConfig = $props();
 
-	let widgetSize: ISize = $state({ width: 0, height: 0 });
-	let editingWidget: boolean = $state(false);
-	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
-	let snappingThreshold: number = $derived(snappingArea! / 2);
+	const snappingThreshold: number = $derived(snappingArea! / 2);
 
-	let lastSuggestedSnapp: IPosition & ISize = {
-		x: widget.x,
-		y: widget.y,
-		width: widget.width,
-		height: widget.height
-	};
-
-	let snappableContainerSize: ISize = $derived({
+	const snappableContainerSize: ISize = $derived({
 		width: Math.floor(containerSize.width / snappingArea!) * snappingArea!,
 		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
@@ -49,23 +39,6 @@
 		suggestedSpec.y + suggestedSpec.height > snappableContainerSize.height ||
 		suggestedSpec.x < 0 ||
 		suggestedSpec.y < 0;
-
-	function roundSpec(
-		direction: 'up' | 'down',
-		prop: 'x' | 'y' | 'width' | 'height'
-	): number {
-		let widgetCopy = { ...widget };
-		widgetCopy[prop] =
-			direction == 'up'
-				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
-				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
-		if (widgetIsOutOfBounds(widgetCopy)) {
-			return lastSuggestedSnapp[prop];
-		} else {
-			lastSuggestedSnapp[prop] = widgetCopy[prop];
-			return widgetCopy[prop];
-		}
-	}
 
 	const adjustedPosition = (position: IPosition): IPosition => ({
 		x:
@@ -143,6 +116,7 @@
 			handleMouseLeave: function (event: MouseEvent) {
 				if (!moving || !editing || !editingWidget) return;
 				event.preventDefault();
+				event.stopPropagation();
 				widget.x = snappingHint.x;
 				widget.y = snappingHint.y;
 				moving = false;
@@ -174,6 +148,34 @@
 			event.stopPropagation();
 			funcs?.onWidgetRemove?.(widget.id);
 		}
+	};
+
+	function roundSpec(
+		direction: 'up' | 'down',
+		prop: 'x' | 'y' | 'width' | 'height'
+	): number {
+		let widgetCopy = { ...widget };
+		widgetCopy[prop] =
+			direction == 'up'
+				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
+				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
+		if (widgetIsOutOfBounds(widgetCopy)) {
+			return lastSuggestedSnapp[prop];
+		} else {
+			lastSuggestedSnapp[prop] = widgetCopy[prop];
+			return widgetCopy[prop];
+		}
+	}
+
+	let widgetSize: ISize = $state({ width: 0, height: 0 });
+	let editingWidget: boolean = $state(false);
+	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
+
+	let lastSuggestedSnapp: IPosition & ISize = {
+		x: widget.x,
+		y: widget.y,
+		width: widget.width,
+		height: widget.height
 	};
 </script>
 
@@ -242,7 +244,7 @@
 
 <style>
 	.on-top {
-		z-index: 999 !important;
+		z-index: 99 !important;
 	}
 	.center-content {
 		display: flex;

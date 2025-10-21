@@ -3,20 +3,26 @@
 	import type { IWidget, IFuncs, ISize } from '$lib/tilgridlib/types/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 
+	// test
+	import WidgetTestContent from '$lib/tilgridlib/WidgetTestContent.svelte';
+	import WidgetTestContent2 from '$lib/tilgridlib/WidgetTestContent2.svelte';
+
 	let widgets: IWidget[] = $state([
 		{
-			id: crypto.randomUUID(),
+			id: 'some_random_id_01',
 			x: 0,
 			y: 0,
 			w: 200,
-			h: 100
+			h: 100,
+			config: ''
 		},
 		{
-			id: crypto.randomUUID(),
+			id: 'some_random_id_02',
 			x: 200,
 			y: 100,
 			w: 200,
-			h: 150
+			h: 150,
+			config: ''
 		}
 	]);
 
@@ -53,11 +59,12 @@
 		);
 
 		widgets.push({
-			id: crypto.randomUUID(),
+			id: 'some_random_id_03',
 			x: newPos.x,
 			y: newPos.y,
 			w: widgetInitialSize.w,
-			h: widgetInitialSize.h
+			h: widgetInitialSize.h,
+			config: ''
 		});
 	}
 </script>
@@ -71,7 +78,11 @@
 		editing={false}
 		{funcs}
 		snappingArea={50}
-	/>
+	>
+		{#snippet widget(widget: IWidget)}
+			<WidgetTestContent {widget} />
+		{/snippet}
+	</Tilgrid>
 </div>
 
 <style>

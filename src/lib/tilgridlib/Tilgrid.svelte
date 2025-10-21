@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Component, Snippet } from 'svelte';
 	import type { IFuncs, IWidget } from './types/widget.ts';
 	import Widget from './Widget.svelte';
 
@@ -10,6 +11,7 @@
 	interface Props {
 		container: HTMLDivElement | undefined;
 		widgets: IWidget[];
+		widget: Snippet<[IWidget]>;
 		width?: string;
 		height?: string;
 		snappingArea?: number;
@@ -22,6 +24,7 @@
 	let {
 		container = $bindable(),
 		widgets = $bindable(),
+		widget,
 		width = DEFAULT_WIDTH,
 		height = DEFAULT_HEIGHT,
 		snappingArea = DEFAULT_SNAPPING_AREA,
@@ -50,7 +53,7 @@
 		--snapping-align-comp: {alignSnappingGrid}px;
 	"
 >
-	{#each widgets as _, i}
+	{#each widgets as w, i}
 		<Widget
 			bind:spec={widgets[i]}
 			bind:moving
@@ -58,7 +61,9 @@
 			{snappingArea}
 			{snappingAnimTime}
 			{funcs}
-		/>
+		>
+			{@render widget?.(w)}
+		</Widget>
 	{/each}
 </div>
 

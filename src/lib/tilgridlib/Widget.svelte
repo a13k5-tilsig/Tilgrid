@@ -6,7 +6,11 @@
 
 	/*
 	 * TODO:
+	 * + Add self-adjustment on out-of-bounds after container resize.
+	 *
+	 * + Add "undo" feature by saving the current specs before updating the config.
 	 * + Add collision mechanism.
+	 *
 	 * + Add ability to make the widget container vertically dynamic.
 	 * + Add min / max widget size (bind with rendered child?)
 	 *

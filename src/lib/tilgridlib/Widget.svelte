@@ -27,6 +27,11 @@
 		children
 	}: IWidgetConfig = $props();
 
+	type IDirection = 'up' | 'down';
+	type IXAxis = 'x' | 'width';
+	type IYAxis = 'y' | 'height';
+	type IAxis = IXAxis | IYAxis;
+
 	const snappingThreshold: number = $derived(snappingArea! / 2);
 
 	const snappableContainerSize: ISize = $derived({
@@ -34,22 +39,26 @@
 		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
 
-	const widgetIsOutOfBounds = (suggestedSpec: IWidget): boolean =>
-		suggestedSpec.x + suggestedSpec.width > snappableContainerSize.width ||
-		suggestedSpec.y + suggestedSpec.height > snappableContainerSize.height ||
-		suggestedSpec.x < 0 ||
-		suggestedSpec.y < 0;
+	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean =>
+		spec == 'x' || spec == 'width'
+			? widget.x + widget.width > snappableContainerSize.width || widget.x < 0
+			: widget.y + widget.height > snappableContainerSize.height ||
+				widget.y < 0;
 
-	function roundWidgetSpec(
-		direction: 'up' | 'down',
-		prop: 'x' | 'y' | 'width' | 'height'
-	): number {
+	let lastSuggestedSnapp: IPosition & ISize = {
+		x: widget.x,
+		y: widget.y,
+		width: widget.width,
+		height: widget.height
+	};
+
+	function roundWidgetSpec(direction: IDirection, prop: IAxis): number {
 		let widgetCopy = { ...widget };
 		widgetCopy[prop] =
 			direction == 'up'
 				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
 				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
-		if (widgetIsOutOfBounds(widgetCopy)) {
+		if (specIsOutOfBounds(widgetCopy, prop)) {
 			return lastSuggestedSnapp[prop];
 		} else {
 			lastSuggestedSnapp[prop] = widgetCopy[prop];
@@ -101,6 +110,10 @@
 			};
 		}
 	});
+
+	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
+	let editingThisWidget: boolean = $state(false);
+	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
 
 	const WIDGET = {
 		move: {
@@ -165,17 +178,6 @@
 			event.stopPropagation();
 			funcs?.onWidgetRemove?.(widget.id);
 		}
-	};
-
-	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
-	let editingThisWidget: boolean = $state(false);
-	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
-
-	let lastSuggestedSnapp: IPosition & ISize = {
-		x: widget.x,
-		y: widget.y,
-		width: widget.width,
-		height: widget.height
 	};
 </script>
 

@@ -29,7 +29,7 @@
 	const config: IContainerConfig = $state({
 		width: '100%',
 		height: '100%',
-		editing: false,
+		editing: true,
 		snappingArea: 50,
 		snappingAnimTime: 200,
 		horizontallyDynamic: false,

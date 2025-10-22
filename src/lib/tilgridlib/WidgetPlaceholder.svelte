@@ -4,11 +4,6 @@
 	let { id, width, height, x, y }: IWidget = $props();
 </script>
 
-<!--
-	FIX:
-	Some funk with snapping when grabbing over text \
-	and then moving up and down.
--->
 <div id="placeholder" class="center-content">
 	<div style:font-family="Arial, Helvetica, sans-serif">
 		<h4>

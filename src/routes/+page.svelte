@@ -9,7 +9,7 @@
 
 	let widgets: IWidget[] = $state([
 		{
-			id: 'some_random_id_01',
+			id: crypto.randomUUID(),
 			x: 0,
 			y: 0,
 			width: 200,
@@ -17,7 +17,7 @@
 			config: ''
 		},
 		{
-			id: 'some_random_id_02',
+			id: crypto.randomUUID(),
 			x: 200,
 			y: 100,
 			width: 200,
@@ -51,7 +51,7 @@
 
 		widgets.push({
 			...newPos,
-			id: 'some_random_id_03',
+			id: crypto.randomUUID(),
 			width: 400,
 			height: 300,
 			config: ''

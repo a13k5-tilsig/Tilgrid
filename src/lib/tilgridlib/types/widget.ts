@@ -8,10 +8,12 @@ export interface ISize {
 	height: number;
 }
 
+export type ISpec = ISize & IPosition;
+
 /**
  * @config? - Widget-spesiffic config. Parsed / deserialized in YOUR widget component.
  */
-export interface IWidget extends IPosition, ISize {
+export interface IWidget extends ISpec {
 	id: string;
 	config?: string;
 }

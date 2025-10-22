@@ -291,6 +291,7 @@
 
 	#widget-frame {
 		position: relative;
+		overflow: hidden;
 	}
 
 	button#delete-button {

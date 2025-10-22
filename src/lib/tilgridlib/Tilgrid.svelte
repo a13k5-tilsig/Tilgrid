@@ -41,37 +41,61 @@
 	let fixSnappingGridAlignment: string = $derived(
 		(snappingArea! / 2).toFixed()
 	);
+
+	const crimpedContainerSize: ISize = $derived({
+		width: containerSize.width - (containerSize.width % snappingArea!),
+		height: containerSize.height - (containerSize.height % snappingArea!)
+	});
 </script>
 
 <div
+	id="container-wrapper"
 	bind:clientWidth={containerSize.width}
 	bind:clientHeight={containerSize.height}
-	class:snapp-hints={editing || moving || resizing}
 	style:width
 	style:height
-	style="
+>
+	<div
+		id="container-snappable-limit"
+		class:snapp-hints={editing || moving || resizing}
+		style:width="{crimpedContainerSize.width}px"
+		style:height="{crimpedContainerSize.height}px"
+		style="
 		--snapping-area: {snappingArea}px;
 		--fix-snapping-grid-elignment: {fixSnappingGridAlignment}px;
-	"
->
-	{#each widgets as w, i (w.id)}
-		<Widget
-			bind:widget={widgets[i]}
-			bind:moving
-			bind:resizing
-			{containerSize}
-			{snappingArea}
-			{snappingAnimTime}
-			{editing}
-			{widgetSpace}
-			{funcs}
-		>
-			{@render widget?.(w)}
-		</Widget>
-	{/each}
+		"
+	>
+		{#each widgets as w, i (w.id)}
+			<Widget
+				bind:widget={widgets[i]}
+				bind:moving
+				bind:resizing
+				{containerSize}
+				{snappingArea}
+				{snappingAnimTime}
+				{editing}
+				{widgetSpace}
+				{funcs}
+			>
+				{@render widget?.(w)}
+			</Widget>
+		{/each}
+	</div>
 </div>
 
 <style>
+	#container-wrapper {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		border: 2px solid blue;
+	}
+
+	#container-snappable-limit {
+		border: 2px solid blue;
+	}
+
 	.snapp-hints {
 		background-image: radial-gradient(black 1px, transparent 0);
 		background-size: var(--snapping-area) var(--snapping-area);

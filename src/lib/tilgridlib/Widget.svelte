@@ -40,6 +40,23 @@
 		suggestedSpec.x < 0 ||
 		suggestedSpec.y < 0;
 
+	function roundWidgetSpec(
+		direction: 'up' | 'down',
+		prop: 'x' | 'y' | 'width' | 'height'
+	): number {
+		let widgetCopy = { ...widget };
+		widgetCopy[prop] =
+			direction == 'up'
+				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
+				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
+		if (widgetIsOutOfBounds(widgetCopy)) {
+			return lastSuggestedSnapp[prop];
+		} else {
+			lastSuggestedSnapp[prop] = widgetCopy[prop];
+			return widgetCopy[prop];
+		}
+	}
+
 	const adjustedPosition = (position: IPosition): IPosition => ({
 		x:
 			position.x % snappingArea! > snappingThreshold
@@ -149,23 +166,6 @@
 			funcs?.onWidgetRemove?.(widget.id);
 		}
 	};
-
-	function roundWidgetSpec(
-		direction: 'up' | 'down',
-		prop: 'x' | 'y' | 'width' | 'height'
-	): number {
-		let widgetCopy = { ...widget };
-		widgetCopy[prop] =
-			direction == 'up'
-				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
-				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
-		if (widgetIsOutOfBounds(widgetCopy)) {
-			return lastSuggestedSnapp[prop];
-		} else {
-			lastSuggestedSnapp[prop] = widgetCopy[prop];
-			return widgetCopy[prop];
-		}
-	}
 
 	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
 	let editingThisWidget: boolean = $state(false);
@@ -279,13 +279,13 @@
 	}
 
 	#widget-wrapper.editing {
-		background-color: white;
+		background-color: lightgray;
 		overflow: auto;
 		resize: both;
 	}
 
 	#widget-mask {
-		background-color: gray;
+		background-color: lightgray;
 		opacity: 0.5;
 	}
 

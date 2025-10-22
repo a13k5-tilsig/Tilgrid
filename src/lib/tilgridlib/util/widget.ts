@@ -1,6 +1,25 @@
 import type { IPosition, ISize, IWidget } from '../types/widget.ts';
 
 /**
+ * Round a number up or down against another number
+ * based on whats closer.
+ *
+ * @param num - The number to round.
+ * @param round - The number to be rounded against.
+ * @returns The closest rounded number.
+ * @example
+ * ```typescript
+ * const result = roundToClosest(122, 5);
+ * console.log(result); // 120;
+ * ```
+ */
+export function roundToClosest(num: number, round: number) {
+	return num % round > round / 2
+		? Math.ceil(num / round) * round
+		: Math.floor(num / round) * round;
+}
+
+/**
  * Convert a given amount of pixels into its value in matrix cells.
  *
  * @param pixels - How many pixels to convert.

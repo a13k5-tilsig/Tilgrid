@@ -64,12 +64,7 @@
 	editing: {config.editing ? 'on' : 'off'}
 </button>
 
-<div
-	style:background-color="lightgray"
-	style:width="70%"
-	style:height="70%"
-	style:margin="auto"
->
+<div id="tilgrid">
 	<Tilgrid bind:containerSize bind:widgets {...config}>
 		{#snippet widget(widget: IWidget)}
 			<WidgetTestContent {widget} />
@@ -83,5 +78,15 @@
 		padding: 0;
 		width: 100%;
 		height: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+	}
+
+	#tilgrid {
+		width: 70%;
+		height: 70%;
+		margin: auto;
 	}
 </style>

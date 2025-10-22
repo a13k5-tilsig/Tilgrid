@@ -9,6 +9,7 @@
 	 * + Mask widget content when editing to avoid accidental clicks.
 	 * + Add collision mechanism.
 	 * + Add ability to make the widget container vertically dynamic.
+	 * + Add min / max widget size (bind with rendered child?)
 	 *
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.

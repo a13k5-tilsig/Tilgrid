@@ -42,8 +42,13 @@
 		(snappingArea! / 2).toFixed()
 	);
 
+	const SNAPP_HINT_OVERFLOW_COMPANSATION = 2;
+
 	const crimpedContainerSize: ISize = $derived({
-		width: containerSize.width - (containerSize.width % snappingArea!),
+		width:
+			containerSize.width -
+			(containerSize.width % snappingArea!) +
+			SNAPP_HINT_OVERFLOW_COMPANSATION,
 		height: containerSize.height - (containerSize.height % snappingArea!)
 	});
 </script>
@@ -61,8 +66,9 @@
 		style:width="{crimpedContainerSize.width}px"
 		style:height="{crimpedContainerSize.height}px"
 		style="
-		--snapping-area: {snappingArea}px;
-		--fix-snapping-grid-elignment: {fixSnappingGridAlignment}px;
+			--snapping-area: {snappingArea}px;
+			--snapping-anim-time: {snappingAnimTime}ms;
+			--fix-snapping-grid-elignment: {fixSnappingGridAlignment}px;
 		"
 	>
 		{#each widgets as w, i (w.id)}
@@ -89,11 +95,12 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		border: 2px solid blue;
+		border: 1px solid transparent;
 	}
 
 	#container-snappable-limit {
-		border: 2px solid blue;
+		border: 1px solid transparent;
+		transition: width var(--snapping-anim-time) ease-in-out;
 	}
 
 	.snapp-hints {

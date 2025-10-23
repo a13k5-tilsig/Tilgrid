@@ -297,6 +297,7 @@
 	}
 
 	#widget-mask {
+		z-index: 2;
 		background-color: lightgray;
 		opacity: 0.5;
 	}
@@ -307,7 +308,7 @@
 	}
 
 	button#delete-button {
-		z-index: 2;
+		z-index: 3;
 		background-color: pink;
 		top: 0;
 		right: 0;

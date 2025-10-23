@@ -7,13 +7,12 @@
 	/*
 	 * TODO:
 	 * + Add self-adjustment on out-of-bounds after container resize.
+	 * + Add vertical stretchability, for new and moving widgets.
 	 *
 	 * + Add "undo" feature by saving the current specs before updating the config.
 	 * + Add collision mechanism.
-	 *
 	 * + Add ability to make the widget container vertically dynamic.
 	 * + Add min / max widget size (bind with rendered child?)
-	 *
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.
 	 */
@@ -42,6 +41,13 @@
 		width: Math.floor(containerSize.width / snappingArea!) * snappingArea!,
 		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
+
+	const xIsOutOfBounds = $derived(
+		widget.x + widget.width > snappableContainerSize.width || widget.x < 0
+	);
+	const yIsOutOfBounds = $derived(
+		widget.y + widget.height > snappableContainerSize.height || widget.y < 0
+	);
 
 	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean =>
 		spec == 'x' || spec == 'width'

@@ -30,7 +30,12 @@
 		editing = DEFAULT.editing,
 		snappingArea = DEFAULT.snappingArea,
 		snappingAnimTime = DEFAULT.snappingAnimTime,
+		// Scales widgets horizontaly to fit the container.
 		horizontallyDynamic = DEFAULT.horizontallyDynamic,
+		// Scales the CONTAINER vertically to fit moving and new widgets.
+		//verticallyDynamic = DEFAULT.verticallyDynamic,
+		// Wrap icons to fit in the container, this requires the vertical axis to be dynamic.
+		//wrapWidgets = false,
 		widgetSpace = DEFAULT.widgetSpace,
 		funcs
 	}: Props = $props();
@@ -43,6 +48,8 @@
 	);
 
 	const SNAPP_HINT_OVERFLOW_COMPANSATION = 2;
+
+	// FIX: snapping container sometimes not centering inside parent.
 
 	const crimpedContainerSize: ISize = $derived({
 		width:

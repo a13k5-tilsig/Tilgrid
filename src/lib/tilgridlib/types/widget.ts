@@ -15,7 +15,7 @@ export type ISpec = ISize & IPosition;
  */
 export interface IWidget extends ISpec {
 	id: string;
-	config?: string;
+	config: string;
 }
 
 /**

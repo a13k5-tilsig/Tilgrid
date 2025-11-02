@@ -1,6 +1,25 @@
 import type { IPosition, ISize, IWidget } from '../types/widget.ts';
 
 /**
+ * Round a number up or down against another number
+ * based on whats closer.
+ *
+ * @param num - The number to round.
+ * @param round - The number to be rounded against.
+ * @returns The closest rounded number.
+ * @example
+ * ```typescript
+ * const result = roundToClosest(122, 5);
+ * console.log(result); // 120;
+ * ```
+ */
+export function roundToClosest(num: number, round: number) {
+	return num % round > round / 2
+		? Math.ceil(num / round) * round
+		: Math.floor(num / round) * round;
+}
+
+/**
  * Convert a given amount of pixels into its value in matrix cells.
  *
  * @param pixels - How many pixels to convert.
@@ -30,9 +49,9 @@ function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
  * @returns \[\[some, amount, of, zeroes\], \[some, amount, of, zeroes\], ...\]
  */
 function makeMatrix(rows: number, columns: number): number[][] {
-	let _rows = [];
+	let _rows: number[][] = [];
 	for (let row = 0; row < rows; row++) {
-		let _columns = [];
+		let _columns: number[] = [];
 		for (let col = 0; col < columns; col++) {
 			_columns.push(0);
 		}
@@ -50,11 +69,12 @@ function makeMatrix(rows: number, columns: number): number[][] {
  */
 function fillOccupiedMatrixCells(
 	matrix: number[][],
-	cellCoordinates: any[][]
+	cellCoordinates: any[][],
 ): number[][] {
+	const filler = 1;
 	let _matrix: number[][] = [...matrix];
 	cellCoordinates.forEach((i: number[]) => {
-		_matrix[i[0]][i[1]] = 1;
+		_matrix[i[0]][i[1]] = filler;
 	});
 	return _matrix;
 }
@@ -69,7 +89,7 @@ function fillOccupiedMatrixCells(
  */
 function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number
+	matrixCellSize: number,
 ): number[][] {
 	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
@@ -82,7 +102,7 @@ function getMatrixCellCoordinatesFromWidgets(
 			for (let w = 0; w < widgetMatrixCellWidth; w++) {
 				occupiedMatrixCells.push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + w
+					widgetMatrixPositionFromLeft + w,
 				]);
 			}
 		}
@@ -111,16 +131,16 @@ export function findAvailablePosition(
 	containerSize: ISize,
 	widgetSize: ISize,
 	snappingArea: number,
-	widgets: IWidget[]
+	widgets: IWidget[],
 ): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.height, snappingArea),
-		fromPxToMatrixCells(containerSize.width, snappingArea)
+		fromPxToMatrixCells(containerSize.width, snappingArea),
 	);
 
 	const widgetMatrix = makeMatrix(
 		fromPxToMatrixCells(widgetSize.height, snappingArea),
-		fromPxToMatrixCells(widgetSize.width, snappingArea)
+		fromPxToMatrixCells(widgetSize.width, snappingArea),
 	);
 
 	// To be used for finding matching matrix in the container matrix.
@@ -128,51 +148,34 @@ export function findAvailablePosition(
 
 	const occupiedMatrixCellCoordinates = getMatrixCellCoordinatesFromWidgets(
 		widgets,
-		snappingArea
+		snappingArea,
 	);
 
 	const filledMatrix = fillOccupiedMatrixCells(
 		containerMatrix,
-		occupiedMatrixCellCoordinates
+		occupiedMatrixCellCoordinates,
 	);
-
-	/**
-	 * sliding window (the brute force approach).
-	 */
 
 	const windowHeight = widgetMatrix.length;
 	const windowWidth = widgetMatrix[0].length;
-	// + 1 to reach the last cell on each axis.
-	const targetHeight = filledMatrix.length - windowHeight + 1;
-	const targetWidth = filledMatrix[0].length - windowWidth + 1;
+	const targetHeight = filledMatrix.length - windowHeight;
+	const targetWidth = filledMatrix[0].length - windowWidth;
 
 	// Target height.
-	for (let th = 0; th < targetHeight; th++) {
+	for (let th = 0; th <= targetHeight; th++) {
 		// Target width.
-		for (let tw = 0; tw < targetWidth; tw++) {
-			let window = [];
+		for (let tw = 0; tw <= targetWidth; tw++) {
+			let window: number[][] = [];
 
-			/*
-			 * TODO:
-			 * Do this using slices (or something equal) to avoid the
-			 * ugly nesting.
-			 */
-
-			// Window height.
+			// Window height, slicing for window width.
 			for (let wh = 0; wh < windowHeight; wh++) {
-				let windowCollumn = [];
-
-				// Window width.
-				for (let ww = 0; ww < windowWidth; ww++) {
-					windowCollumn.push(filledMatrix[th + wh][tw + ww]);
-				}
-				window.push(windowCollumn);
+				window.push(filledMatrix[th + wh].slice(tw, tw + windowWidth));
 			}
 
 			if (JSON.stringify(window) === widgetMatrixStringified) {
 				return {
 					x: fromMatrixCellsToPx(tw, snappingArea),
-					y: fromMatrixCellsToPx(th, snappingArea)
+					y: fromMatrixCellsToPx(th, snappingArea),
 				};
 			}
 		}

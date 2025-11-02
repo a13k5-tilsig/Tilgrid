@@ -9,7 +9,7 @@
 
 	let widgets: IWidget[] = $state([
 		{
-			id: 'some_random_id_01',
+			id: crypto.randomUUID(),
 			x: 0,
 			y: 0,
 			width: 200,
@@ -17,7 +17,7 @@
 			config: ''
 		},
 		{
-			id: 'some_random_id_02',
+			id: crypto.randomUUID(),
 			x: 200,
 			y: 100,
 			width: 200,
@@ -29,7 +29,7 @@
 	const config: IContainerConfig = $state({
 		width: '100%',
 		height: '100%',
-		editing: false,
+		editing: true,
 		snappingArea: 50,
 		snappingAnimTime: 200,
 		horizontallyDynamic: false,
@@ -51,7 +51,7 @@
 
 		widgets.push({
 			...newPos,
-			id: 'some_random_id_03',
+			id: crypto.randomUUID(),
 			width: 400,
 			height: 300,
 			config: ''
@@ -64,12 +64,7 @@
 	editing: {config.editing ? 'on' : 'off'}
 </button>
 
-<div
-	style:background-color="lightgray"
-	style:width="70%"
-	style:height="70%"
-	style:margin="auto"
->
+<div id="tilgrid">
 	<Tilgrid bind:containerSize bind:widgets {...config}>
 		{#snippet widget(widget: IWidget)}
 			<WidgetTestContent {widget} />
@@ -83,5 +78,15 @@
 		padding: 0;
 		width: 100%;
 		height: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+	}
+
+	#tilgrid {
+		width: 70%;
+		height: 70%;
+		margin: auto;
 	}
 </style>

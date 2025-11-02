@@ -6,11 +6,13 @@
 
 	/*
 	 * TODO:
-	 * + Mask widget content when editing to avoid accidental clicks.
+	 * + Add self-adjustment on out-of-bounds after container resize.
+	 * + Add vertical stretchability, for new and moving widgets.
+	 *
+	 * + Add "undo" feature by saving the current specs before updating the config.
 	 * + Add collision mechanism.
 	 * + Add ability to make the widget container vertically dynamic.
 	 * + Add min / max widget size (bind with rendered child?)
-	 *
 	 * + Add style option; when resizing, only resize a dotted "border" before
 	 *   actually resizing the widget when letting go of the cursor.
 	 */
@@ -28,6 +30,11 @@
 		children
 	}: IWidgetConfig = $props();
 
+	type IDirection = 'up' | 'down';
+	type IXAxis = 'x' | 'width';
+	type IYAxis = 'y' | 'height';
+	type IAxis = IXAxis | IYAxis;
+
 	const snappingThreshold: number = $derived(snappingArea! / 2);
 
 	const snappableContainerSize: ISize = $derived({
@@ -35,11 +42,39 @@
 		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
 
-	const widgetIsOutOfBounds = (suggestedSpec: IWidget): boolean =>
-		suggestedSpec.x + suggestedSpec.width > snappableContainerSize.width ||
-		suggestedSpec.y + suggestedSpec.height > snappableContainerSize.height ||
-		suggestedSpec.x < 0 ||
-		suggestedSpec.y < 0;
+	const xIsOutOfBounds = $derived(
+		widget.x + widget.width > snappableContainerSize.width || widget.x < 0
+	);
+	const yIsOutOfBounds = $derived(
+		widget.y + widget.height > snappableContainerSize.height || widget.y < 0
+	);
+
+	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean =>
+		spec == 'x' || spec == 'width'
+			? widget.x + widget.width > snappableContainerSize.width || widget.x < 0
+			: widget.y + widget.height > snappableContainerSize.height ||
+				widget.y < 0;
+
+	let lastSuggestedSnapp: IPosition & ISize = {
+		x: widget.x,
+		y: widget.y,
+		width: widget.width,
+		height: widget.height
+	};
+
+	function roundWidgetSpec(direction: IDirection, prop: IAxis): number {
+		let widgetCopy = { ...widget };
+		widgetCopy[prop] =
+			direction == 'up'
+				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
+				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
+		if (specIsOutOfBounds(widgetCopy, prop)) {
+			return lastSuggestedSnapp[prop];
+		} else {
+			lastSuggestedSnapp[prop] = widgetCopy[prop];
+			return widgetCopy[prop];
+		}
+	}
 
 	const adjustedPosition = (position: IPosition): IPosition => ({
 		x:
@@ -86,6 +121,10 @@
 		}
 	});
 
+	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
+	let editingThisWidget: boolean = $state(false);
+	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
+
 	const WIDGET = {
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
@@ -93,7 +132,7 @@
 				event.preventDefault();
 				event.stopPropagation();
 				moving = true;
-				editingWidget = true;
+				editingThisWidget = true;
 				cursorWidgetAnchor.x = event.offsetX;
 				cursorWidgetAnchor.y = event.offsetY;
 			},
@@ -104,44 +143,44 @@
 				widget.x = snappingHint.x;
 				widget.y = snappingHint.y;
 				moving = false;
-				editingWidget = false;
+				editingThisWidget = false;
 				funcs?.onWidgetMove?.(widget.id);
 			},
 			handleMouseMove: function (event: MouseEvent) {
-				if (!moving || !editing || !editingWidget) return;
+				if (!moving || !editing || !editingThisWidget) return;
 				event.preventDefault();
 				event.stopPropagation();
 				widget.x -= cursorWidgetAnchor.x - event.offsetX;
 				widget.y -= cursorWidgetAnchor.y - event.offsetY;
 			},
 			handleMouseLeave: function (event: MouseEvent) {
-				if (!moving || !editing || !editingWidget) return;
+				if (!moving || !editing || !editingThisWidget) return;
 				event.preventDefault();
 				event.stopPropagation();
 				widget.x = snappingHint.x;
 				widget.y = snappingHint.y;
 				moving = false;
-				editingWidget = false;
+				editingThisWidget = false;
 			}
 		},
 		resize: {
 			handleMouseDown: function () {
 				if (!editing) return;
 				resizing = true;
-				editingWidget = true;
+				editingThisWidget = true;
 			},
 			handleMouseUp: function () {
-				if (!resizing || !editing || !editingWidget) return;
+				if (!resizing || !editing || !editingThisWidget) return;
 				widget.width = snappingHint.width;
 				widget.height = snappingHint.height;
 				resizing = false;
-				editingWidget = false;
+				editingThisWidget = false;
 				funcs?.onWidgetResize?.(widget.id);
 			},
 			handleMouseMove: function () {
-				if (!resizing || !editing || !editingWidget) return;
-				widget.width = widgetSize.width;
-				widget.height = widgetSize.height;
+				if (!resizing || !editing || !editingThisWidget) return;
+				widget.width = currentWidgetSize.width;
+				widget.height = currentWidgetSize.height;
 			}
 		},
 		remove: function (event: MouseEvent) {
@@ -150,74 +189,40 @@
 			funcs?.onWidgetRemove?.(widget.id);
 		}
 	};
-
-	function roundWidgetSpec(
-		direction: 'up' | 'down',
-		prop: 'x' | 'y' | 'width' | 'height'
-	): number {
-		let widgetCopy = { ...widget };
-		widgetCopy[prop] =
-			direction == 'up'
-				? Math.ceil(widget[prop] / snappingArea!) * snappingArea!
-				: Math.floor(widget[prop] / snappingArea!) * snappingArea!;
-		if (widgetIsOutOfBounds(widgetCopy)) {
-			return lastSuggestedSnapp[prop];
-		} else {
-			lastSuggestedSnapp[prop] = widgetCopy[prop];
-			return widgetCopy[prop];
-		}
-	}
-
-	let widgetSize: ISize = $state({ width: 0, height: 0 });
-	let editingWidget: boolean = $state(false);
-	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
-
-	let lastSuggestedSnapp: IPosition & ISize = {
-		x: widget.x,
-		y: widget.y,
-		width: widget.width,
-		height: widget.height
-	};
 </script>
 
 <div
 	id="snapping-hint"
 	class="ease-snapping"
-	class:on-top={editingWidget}
+	class:on-top={editingThisWidget}
 	style:width="{snappingHint.width}px"
 	style:height="{snappingHint.height}px"
-	style:opacity={editingWidget ? 0.4 : 0}
-	style="
-		--snapping-hint-x-pos: {snappingHint.x}px;
-		--snapping-hint-y-pos: {snappingHint.y}px;
-		--transition-time: calc({snappingAnimTime}ms / 2);
-	"
+	style:opacity={editingThisWidget ? 0.4 : 0}
+	style:transform="translateX({snappingHint.x}px) translateY({snappingHint.y}px)"
+	style="--transition-time: calc({snappingAnimTime}ms / 2)"
 ></div>
 
 <div
-	id="widget-wrapper"
+	bind:clientWidth={currentWidgetSize.width}
+	bind:clientHeight={currentWidgetSize.height}
 	role="none"
-	bind:clientWidth={widgetSize.width}
-	bind:clientHeight={widgetSize.height}
-	class:on-top={editingWidget}
-	class:ease-snapping={!editingWidget}
+	id="widget-wrapper"
 	class:editing
-	style:opacity={editingWidget ? '0.8' : '1'}
+	class:on-top={editingThisWidget}
+	class:ease-snapping={!editingThisWidget}
 	style:width="{widget.width}px"
 	style:height="{widget.height}px"
-	style="
-		--x-pos: {widget.x}px;
-		--y-pos: {widget.y}px;
-		--widget-space: {widgetSpace}px;
-		--transition-time: {snappingAnimTime}ms;
-	"
+	style:padding="{widgetSpace}px"
+	style:opacity={editingThisWidget ? '0.8' : '1'}
+	style:transform="translateX({widget.x}px) translateY({widget.y}px)"
+	style="--transition-time: {snappingAnimTime}ms"
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
 >
 	{#if !!funcs?.onWidgetRemove && editing}
 		<button
-			id="remove"
+			id="delete-button"
 			class="center-content"
 			onmousedown={(e) => e.stopPropagation()}
 			onclick={WIDGET.remove}
@@ -226,18 +231,12 @@
 		</button>
 	{/if}
 
-	<div
-		style:position="relative"
-		style:height="100%"
-		style:width="100%"
-		style:user-select={editing ? 'none' : 'initial'}
-	>
-		{#if editing || moving || resizing || editingWidget}
+	<div id="widget-frame" style:user-select={editing ? 'none' : 'initial'}>
+		{#if editing || moving || resizing || editingThisWidget}
 			<div
-				id="widget"
 				role="none"
+				id="widget-mask"
 				style:cursor={!editing ? 'auto' : moving ? 'grabbing' : 'grab'}
-				style:opacity="0.5"
 				onmousedown={WIDGET.move.handleMouseDown}
 				onmouseup={WIDGET.move.handleMouseUp}
 				onmousemove={WIDGET.move.handleMouseMove}
@@ -255,7 +254,7 @@
 
 <style>
 	.on-top {
-		z-index: 99 !important;
+		z-index: 1;
 	}
 	.center-content {
 		display: flex;
@@ -269,40 +268,47 @@
 		transition-duration: var(--transition-time);
 	}
 
-	#widget-wrapper,
-	#widget,
 	#snapping-hint,
-	#remove {
+	#widget-wrapper,
+	#widget-mask,
+	#delete-button {
 		position: absolute;
 	}
 
+	#widget-mask,
+	#widget-frame {
+		width: 100%;
+		height: 100%;
+	}
+
+	#snapping-hint {
+		background-color: #443443;
+	}
+
 	#widget-wrapper {
-		transform: translateX(var(--x-pos)) translateY(var(--y-pos));
-		padding: var(--widget-space);
 		box-sizing: border-box;
-		overflow: auto;
 		transition: opacity var(--transition-time) ease-in-out;
 	}
 
 	#widget-wrapper.editing {
+		background-color: lightgray;
+		overflow: auto;
 		resize: both;
-		background-color: white;
 	}
 
-	#widget {
-		width: 100%;
-		height: 100%;
-		background-color: gray;
+	#widget-mask {
+		z-index: 2;
+		background-color: lightgray;
+		opacity: 0.5;
+	}
+
+	#widget-frame {
+		position: relative;
 		overflow: hidden;
 	}
 
-	#snapping-hint {
-		transform: translateX(var(--snapping-hint-x-pos))
-			translateY(var(--snapping-hint-y-pos));
-		background-color: #443443;
-	}
-
-	button#remove {
+	button#delete-button {
+		z-index: 3;
 		background-color: pink;
 		top: 0;
 		right: 0;

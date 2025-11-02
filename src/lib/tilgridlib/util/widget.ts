@@ -49,9 +49,9 @@ function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
  * @returns \[\[some, amount, of, zeroes\], \[some, amount, of, zeroes\], ...\]
  */
 function makeMatrix(rows: number, columns: number): number[][] {
-	let _rows = [];
+	let _rows: number[][] = [];
 	for (let row = 0; row < rows; row++) {
-		let _columns = [];
+		let _columns: number[] = [];
 		for (let col = 0; col < columns; col++) {
 			_columns.push(0);
 		}
@@ -69,7 +69,7 @@ function makeMatrix(rows: number, columns: number): number[][] {
  */
 function fillOccupiedMatrixCells(
 	matrix: number[][],
-	cellCoordinates: any[][]
+	cellCoordinates: any[][],
 ): number[][] {
 	const filler = 1;
 	let _matrix: number[][] = [...matrix];
@@ -89,7 +89,7 @@ function fillOccupiedMatrixCells(
  */
 function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number
+	matrixCellSize: number,
 ): number[][] {
 	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
@@ -102,7 +102,7 @@ function getMatrixCellCoordinatesFromWidgets(
 			for (let w = 0; w < widgetMatrixCellWidth; w++) {
 				occupiedMatrixCells.push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + w
+					widgetMatrixPositionFromLeft + w,
 				]);
 			}
 		}
@@ -131,16 +131,16 @@ export function findAvailablePosition(
 	containerSize: ISize,
 	widgetSize: ISize,
 	snappingArea: number,
-	widgets: IWidget[]
+	widgets: IWidget[],
 ): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.height, snappingArea),
-		fromPxToMatrixCells(containerSize.width, snappingArea)
+		fromPxToMatrixCells(containerSize.width, snappingArea),
 	);
 
 	const widgetMatrix = makeMatrix(
 		fromPxToMatrixCells(widgetSize.height, snappingArea),
-		fromPxToMatrixCells(widgetSize.width, snappingArea)
+		fromPxToMatrixCells(widgetSize.width, snappingArea),
 	);
 
 	// To be used for finding matching matrix in the container matrix.
@@ -148,12 +148,12 @@ export function findAvailablePosition(
 
 	const occupiedMatrixCellCoordinates = getMatrixCellCoordinatesFromWidgets(
 		widgets,
-		snappingArea
+		snappingArea,
 	);
 
 	const filledMatrix = fillOccupiedMatrixCells(
 		containerMatrix,
-		occupiedMatrixCellCoordinates
+		occupiedMatrixCellCoordinates,
 	);
 
 	/**
@@ -170,7 +170,7 @@ export function findAvailablePosition(
 	for (let th = 0; th < targetHeight; th++) {
 		// Target width.
 		for (let tw = 0; tw < targetWidth; tw++) {
-			let window = [];
+			let window: number[][] = [];
 
 			/*
 			 * TODO:
@@ -180,7 +180,7 @@ export function findAvailablePosition(
 
 			// Window height.
 			for (let wh = 0; wh < windowHeight; wh++) {
-				let windowCollumn = [];
+				let windowCollumn: number[] = [];
 
 				// Window width.
 				for (let ww = 0; ww < windowWidth; ww++) {
@@ -192,7 +192,7 @@ export function findAvailablePosition(
 			if (JSON.stringify(window) === widgetMatrixStringified) {
 				return {
 					x: fromMatrixCellsToPx(tw, snappingArea),
-					y: fromMatrixCellsToPx(th, snappingArea)
+					y: fromMatrixCellsToPx(th, snappingArea),
 				};
 			}
 		}

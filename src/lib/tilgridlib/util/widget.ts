@@ -156,37 +156,20 @@ export function findAvailablePosition(
 		occupiedMatrixCellCoordinates,
 	);
 
-	/**
-	 * sliding window (the brute force approach).
-	 */
-
 	const windowHeight = widgetMatrix.length;
 	const windowWidth = widgetMatrix[0].length;
-	// + 1 to reach the last cell on each axis.
-	const targetHeight = filledMatrix.length - windowHeight + 1;
-	const targetWidth = filledMatrix[0].length - windowWidth + 1;
+	const targetHeight = filledMatrix.length - windowHeight;
+	const targetWidth = filledMatrix[0].length - windowWidth;
 
 	// Target height.
-	for (let th = 0; th < targetHeight; th++) {
+	for (let th = 0; th <= targetHeight; th++) {
 		// Target width.
-		for (let tw = 0; tw < targetWidth; tw++) {
+		for (let tw = 0; tw <= targetWidth; tw++) {
 			let window: number[][] = [];
 
-			/*
-			 * TODO:
-			 * Do this using slices (or something equal) to avoid the
-			 * ugly nesting.
-			 */
-
-			// Window height.
+			// Window height, slicing for window width.
 			for (let wh = 0; wh < windowHeight; wh++) {
-				let windowCollumn: number[] = [];
-
-				// Window width.
-				for (let ww = 0; ww < windowWidth; ww++) {
-					windowCollumn.push(filledMatrix[th + wh][tw + ww]);
-				}
-				window.push(windowCollumn);
+				window.push(filledMatrix[th + wh].slice(tw, tw + windowWidth));
 			}
 
 			if (JSON.stringify(window) === widgetMatrixStringified) {

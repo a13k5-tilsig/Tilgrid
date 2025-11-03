@@ -11,7 +11,7 @@
 		snappingArea: 50,
 		snappingAnimTime: 200,
 		horizontallyDynamic: true,
-		widgetSpace: 5
+		widgetSpace: 5,
 	};
 
 	interface Props extends IContainerConfig {
@@ -37,14 +37,14 @@
 		// Wrap icons to fit in the container, this requires the vertical axis to be dynamic.
 		//wrapWidgets = false,
 		widgetSpace = DEFAULT.widgetSpace,
-		funcs
+		funcs,
 	}: Props = $props();
 
 	let moving: boolean = $state(false);
 	let resizing: boolean = $state(false);
 
 	let fixSnappingGridAlignment: string = $derived(
-		(snappingArea! / 2).toFixed()
+		(snappingArea! / 2).toFixed(),
 	);
 
 	const SNAPP_HINT_OVERFLOW_COMPANSATION = 2;
@@ -56,7 +56,7 @@
 			containerSize.width -
 			(containerSize.width % snappingArea!) +
 			SNAPP_HINT_OVERFLOW_COMPANSATION,
-		height: containerSize.height - (containerSize.height % snappingArea!)
+		height: containerSize.height - (containerSize.height % snappingArea!),
 	});
 </script>
 
@@ -80,6 +80,7 @@
 	>
 		{#each widgets as w, i (w.id)}
 			<Widget
+				bind:widgets
 				bind:widget={widgets[i]}
 				bind:moving
 				bind:resizing

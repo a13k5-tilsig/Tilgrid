@@ -34,7 +34,7 @@ export function roundToClosest(num: number, round: number) {
  * @param matrixBlockSize - The size (in pixels) of a matrix cell.
  * @returns (floored(pixels / matrixCellSize)).
  */
-function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
+export function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
 	return Math.floor(pixels / matrixCellSize);
 }
 
@@ -45,7 +45,7 @@ function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
  * @param matrixCellSize - The size (in pixels) of a matrix cell.
  * @returns (cells * matrixCellSize).
  */
-function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
+export function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
 	return cells * matrixCellSize;
 }
 
@@ -56,7 +56,7 @@ function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
  * @param columns - Amount of collumns (horizontal cells).
  * @returns \[\[some, amount, of, zeroes\], \[some, amount, of, zeroes\], ...\]
  */
-function makeMatrix(rows: number, columns: number): number[][] {
+export function makeMatrix(rows: number, columns: number): number[][] {
 	let _rows: number[][] = [];
 	for (let row = 0; row < rows; row++) {
 		let _columns: number[] = [];
@@ -65,6 +65,7 @@ function makeMatrix(rows: number, columns: number): number[][] {
 		}
 		_rows.push(_columns);
 	}
+
 	return _rows;
 }
 
@@ -84,6 +85,7 @@ function fillOccupiedMatrixCells(
 	cellCoordinates.forEach((n: number[]) => {
 		_matrix[n[0]][n[1]] = filler;
 	});
+
 	return _matrix;
 }
 
@@ -115,6 +117,7 @@ function getMatrixCellCoordinatesFromWidgets(
 			}
 		}
 	});
+
 	return occupiedMatrixCells;
 }
 
@@ -263,7 +266,7 @@ function getMappedMatrixCellCoordinatesFromWidgets(
 
 		for (let h = 0; h < widgetMatrixCellHeight; h++) {
 			for (let wi = 0; wi < widgetMatrixCellWidth; wi++) {
-				if (occupiedMatrixCellsMap[w.id] == undefined) {
+				if (occupiedMatrixCellsMap[w.id] === undefined) {
 					occupiedMatrixCellsMap[w.id] = [];
 				}
 				occupiedMatrixCellsMap[w.id].push([

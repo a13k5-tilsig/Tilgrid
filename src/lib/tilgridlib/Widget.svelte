@@ -3,7 +3,7 @@
 	import type { IWidgetConfig } from './types/config';
 	import XIcon from './XIcon.svelte';
 	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
-	import { ShiftWidgets } from './util/widget';
+	import { ShiftWidgets } from './util/shiftWidgets';
 
 	/*
 	 * TODO:

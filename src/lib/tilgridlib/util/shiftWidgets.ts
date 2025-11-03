@@ -1,5 +1,10 @@
-import type { IWidget } from '../types/widget';
-import { makeMatrix, findAvailablePosition, fromPxToMatrixCells, fromMatrixCellsToPx } from './widget';
+import type { IPosition, ISize, IWidget } from '../types/widget';
+import {
+	makeMatrix,
+	findAvailablePosition,
+	fromPxToMatrixCells,
+	fromMatrixCellsToPx,
+} from './widget';
 
 type IWidgetMap = Record<string, number[][]>;
 type IWidgetIdMatrix = (number | string)[][];
@@ -75,7 +80,7 @@ function fillOccupiedMatrixCellsWithWidgetId(
 ): IWidgetMatrixCollision {
 	let _matrix: IWidgetMatrixCollision = {
 		collidingId: null,
-		matrix: [ ...matrix ],
+		matrix: [...matrix],
 	};
 	Object.entries(widgetMap).forEach(([id, coordinates]) => {
 		coordinates.forEach((c: number[]) => {
@@ -112,22 +117,23 @@ function fillOccupiedMatrixCells(
 export class ShiftWidgets {
 	movingWidget: IWidget;
 	suggestedPos: IPosition;
-	widgets: IWidgets[];
+	widgets: IWidget[];
 	containerSize: ISize;
 	matrixCellSize: number;
 
 	containerMatrix: number[][];
-	sortedWidgets: IWidgets[];
+	sortedWidgets: IWidget[];
 
 	occupiedCellCoordinates: IWidgetMap;
+	occupiedCells: IWidgetMatrixCollision;
 
-	widgetsToShift: IWidgets[];
-	widgetsToStay: IWidgets[];
+	widgetsToShift: IWidget[];
+	widgetsToStay: IWidget[];
 
 	constructor(
 		movingWidget: IWidget,
 		suggestedPos: IPosition,
-		widgets: IWidgets[],
+		widgets: IWidget[],
 		containerSize: ISize,
 		matrixCellSize: number,
 	) {
@@ -140,7 +146,8 @@ export class ShiftWidgets {
 		this.containerMatrix = [];
 		this.sortedWidgets = [];
 
-		this.occupiedCellCoordinates = [];
+		this.occupiedCellCoordinates = {};
+		this.occupiedCells = { collidingId: null, matrix: [] };
 
 		this.widgetsToShift = [];
 		this.widgetsToStay = [];
@@ -166,18 +173,17 @@ export class ShiftWidgets {
 
 		// [4] Write the IDs of the widgets to the cells they occupy.
 		this.occupiedCells = fillOccupiedMatrixCellsWithWidgetId(
-			this.containerMatris,
+			this.containerMatrix,
 			this.occupiedCellCoordinates,
 		);
 
 		// [5] Act on a widget-collision.
-		if (this.occupiedCells.collidingId) {
-
-			console.log("COLLISION WITH: ", this.occupiedCells.collidingId);
+		if (this.occupiedCells.collidingId != null) {
+			console.log('COLLISION WITH: ', this.occupiedCells.collidingId);
 
 			// Remove the moving widget from the array to avoid conflict for now.
 			const indexOfMoving = this.sortedWidgets.findIndex(
-				(w: IWidgets) => w.id === this.movingWidget.id
+				(w: IWidget) => w.id === this.movingWidget.id,
 			);
 			this.sortedWidgets.splice(indexOfMoving);
 
@@ -186,13 +192,16 @@ export class ShiftWidgets {
 			);
 
 			this.widgetsToShift = this.sortedWidgets.slice(collidingIndex);
-			this.widgetsToStay = this.sortedWidgets.slice(0, collidingIndex)
+			this.widgetsToStay = this.sortedWidgets.slice(0, collidingIndex);
 
-			this.sequentialShift();
+			this.sequantialShift();
 		}
 	}
 
 	sequantialShift() {
+		console.log('running sequantialShift!');
+		console.log('widgetsToShift: ', JSON.stringify(this.widgetsToShift));
+
 		this.widgetsToShift.forEach((w: IWidget) => {
 			const newPosition = findAvailablePosition(
 				this.containerSize,
@@ -202,11 +211,13 @@ export class ShiftWidgets {
 			);
 
 			this.widgetsToStay.push({
-				...w, x: newPosition.x, y: newPosition.y
+				...w,
+				x: newPosition.x,
+				y: newPosition.y,
 			});
-		})
+		});
 
-		this.sortedWidgets = [ ...this.widgetsToStay, this.movingWidget ];
+		this.sortedWidgets = [...this.widgetsToStay, this.movingWidget];
 	}
 
 	get shifted() {

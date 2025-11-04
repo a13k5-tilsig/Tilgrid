@@ -34,7 +34,10 @@ export function roundToClosest(num: number, round: number) {
  * @param matrixBlockSize - The size (in pixels) of a matrix cell.
  * @returns (floored(pixels / matrixCellSize)).
  */
-export function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
+export function fromPxToMatrixCells(
+	pixels: number,
+	matrixCellSize: number
+): number {
 	return Math.floor(pixels / matrixCellSize);
 }
 
@@ -45,7 +48,10 @@ export function fromPxToMatrixCells(pixels: number, matrixCellSize: number): num
  * @param matrixCellSize - The size (in pixels) of a matrix cell.
  * @returns (cells * matrixCellSize).
  */
-export function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
+export function fromMatrixCellsToPx(
+	cells: number,
+	matrixCellSize: number
+): number {
 	return cells * matrixCellSize;
 }
 
@@ -79,7 +85,7 @@ export function makeMatrix(rows: number, columns: number): number[][] {
 function fillOccupiedMatrixCells(
 	matrix: number[][],
 	cellCoordinates: any[][],
-	filler: any = 1,
+	filler: any = 1
 ): number[][] {
 	let _matrix: number[][] = [...matrix];
 	cellCoordinates.forEach((n: number[]) => {
@@ -99,7 +105,7 @@ function fillOccupiedMatrixCells(
  */
 function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number,
+	matrixCellSize: number
 ): number[][] {
 	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
@@ -112,7 +118,7 @@ function getMatrixCellCoordinatesFromWidgets(
 			for (let w = 0; w < widgetMatrixCellWidth; w++) {
 				occupiedMatrixCells.push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + w,
+					widgetMatrixPositionFromLeft + w
 				]);
 			}
 		}
@@ -142,16 +148,16 @@ export function findAvailablePosition(
 	containerSize: ISize,
 	widgetSize: ISize,
 	snappingArea: number,
-	widgets: IWidget[],
+	widgets: IWidget[]
 ): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.height, snappingArea),
-		fromPxToMatrixCells(containerSize.width, snappingArea),
+		fromPxToMatrixCells(containerSize.width, snappingArea)
 	);
 
 	const widgetMatrix = makeMatrix(
 		fromPxToMatrixCells(widgetSize.height, snappingArea),
-		fromPxToMatrixCells(widgetSize.width, snappingArea),
+		fromPxToMatrixCells(widgetSize.width, snappingArea)
 	);
 
 	// To be used for finding matching matrix in the container matrix.
@@ -159,12 +165,12 @@ export function findAvailablePosition(
 
 	const occupiedMatrixCellCoordinates = getMatrixCellCoordinatesFromWidgets(
 		widgets,
-		snappingArea,
+		snappingArea
 	);
 
 	const filledMatrix = fillOccupiedMatrixCells(
 		containerMatrix,
-		occupiedMatrixCellCoordinates,
+		occupiedMatrixCellCoordinates
 	);
 
 	const windowHeight = widgetMatrix.length;
@@ -186,7 +192,7 @@ export function findAvailablePosition(
 			if (JSON.stringify(window) === widgetMatrixStringified) {
 				return {
 					x: fromMatrixCellsToPx(tw, snappingArea),
-					y: fromMatrixCellsToPx(th, snappingArea),
+					y: fromMatrixCellsToPx(th, snappingArea)
 				};
 			}
 		}
@@ -227,11 +233,11 @@ function sortMatrixWidgetsByPosition(widgets: IWidget[]): IWidget[] {
  */
 function fillOccupiedMatrixCellsWithWidgetId(
 	matrix: number[][],
-	widgetMap: IWidgetMap,
+	widgetMap: IWidgetMap
 ): IWidgetMatrixCollision {
 	let _matrix: IWidgetMatrixCollision = {
 		collidingId: null,
-		matrix: [...matrix],
+		matrix: [...matrix]
 	};
 	Object.entries(widgetMap).forEach(([id, coordinates]) => {
 		coordinates.forEach((c: number[]) => {
@@ -255,7 +261,7 @@ function fillOccupiedMatrixCellsWithWidgetId(
  */
 function getMappedMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number,
+	matrixCellSize: number
 ): IWidgetMap {
 	let occupiedMatrixCellsMap: IWidgetMap = {};
 	widgets.forEach((w: IWidget) => {
@@ -271,7 +277,7 @@ function getMappedMatrixCellCoordinatesFromWidgets(
 				}
 				occupiedMatrixCellsMap[w.id].push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + wi,
+					widgetMatrixPositionFromLeft + wi
 				]);
 			}
 		}
@@ -303,7 +309,7 @@ export class ShiftWidgets {
 		suggestedPos: IPosition,
 		widgets: IWidget[],
 		containerSize: ISize,
-		matrixCellSize: number,
+		matrixCellSize: number
 	) {
 		this._movingWidget = movingWidget;
 		this._suggestedPos = suggestedPos;
@@ -317,20 +323,20 @@ export class ShiftWidgets {
 
 		const _movingWidgetSuggestedPosition = {
 			x: suggestedPos.x,
-			y: suggestedPos.y,
+			y: suggestedPos.y
 		};
 		const _matrix = makeMatrix(
 			fromPxToMatrixCells(containerSize.width, matrixCellSize),
-			fromPxToMatrixCells(containerSize.height, matrixCellSize),
+			fromPxToMatrixCells(containerSize.height, matrixCellSize)
 		);
 		const _matrixStringified = JSON.stringify(_matrix);
 		const _occupiedCellsCoordinates = getMappedMatrixCellCoordinatesFromWidgets(
 			widgets,
-			matrixCellSize,
+			matrixCellSize
 		);
 		const _occupiedMatrixCells = fillOccupiedMatrixCellsWithWidgetId(
 			_matrix,
-			_occupiedCellsCoordinates,
+			_occupiedCellsCoordinates
 		);
 
 		if (
@@ -349,7 +355,7 @@ export class ShiftWidgets {
 		if (_occupiedMatrixCells.collidingId) {
 			console.log('COLLISION WITH: ', _occupiedMatrixCells.collidingId);
 			const collidingIndex = this._sortedWidgets.findIndex(
-				(w) => w.id === _occupiedMatrixCells.collidingId,
+				(w) => w.id === _occupiedMatrixCells.collidingId
 			);
 			this._widgetsToShift = this._sortedWidgets.slice(collidingIndex);
 			this._widgetsToKeep = this._sortedWidgets.slice(0, collidingIndex);
@@ -361,12 +367,12 @@ export class ShiftWidgets {
 	sequentialShift() {
 		const occupiedCells = getMatrixCellCoordinatesFromWidgets(
 			sortMatrixWidgetsByPosition([...this._widgetsToKeep, this._movingWidget]),
-			this._matrixCellSize,
+			this._matrixCellSize
 		);
 
 		this._matrixKeepAndMoving = fillOccupiedMatrixCells(
 			ShiftWidgets.matrix!,
-			occupiedCells,
+			occupiedCells
 		);
 
 		/**
@@ -381,7 +387,7 @@ export class ShiftWidgets {
 				this._containerSize,
 				{ width: w.width, height: w.height },
 				this._matrixCellSize,
-				this._widgetsToKeep,
+				this._widgetsToKeep
 			);
 
 			const widget = { ...w, x: newPosition.x, y: newPosition.y };

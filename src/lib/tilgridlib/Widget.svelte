@@ -3,7 +3,7 @@
 	import type { IWidgetConfig } from './types/config';
 	import XIcon from './XIcon.svelte';
 	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
-	import { ShiftWidgets } from './util/shiftWidgets';
+	//import { ShiftWidgets } from './util/shiftWidgets';
 
 	/*
 	 * TODO:
@@ -11,6 +11,7 @@
 	 * + Add vertical stretchability, for new and moving widgets.
 	 *
 	 * + Add "undo" feature by saving the current specs before updating the config.
+	 *
 	 * + Add collision mechanism.
 	 * + Add ability to make the widget container vertically dynamic.
 	 * + Add min / max widget size (bind with rendered child?)
@@ -29,7 +30,7 @@
 		editing,
 		widgetSpace,
 		funcs,
-		children,
+		children
 	}: IWidgetConfig & { widgets: IWidget[] } = $props();
 
 	type IDirection = 'up' | 'down';
@@ -41,15 +42,8 @@
 
 	const snappableContainerSize: ISize = $derived({
 		width: Math.floor(containerSize.width / snappingArea!) * snappingArea!,
-		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!,
+		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
-
-	const xIsOutOfBounds = $derived(
-		widget.x + widget.width > snappableContainerSize.width || widget.x < 0,
-	);
-	const yIsOutOfBounds = $derived(
-		widget.y + widget.height > snappableContainerSize.height || widget.y < 0,
-	);
 
 	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean =>
 		spec == 'x' || spec == 'width'
@@ -61,7 +55,7 @@
 		x: widget.x,
 		y: widget.y,
 		width: widget.width,
-		height: widget.height,
+		height: widget.height
 	};
 
 	function roundWidgetSpec(direction: IDirection, prop: IAxis): number {
@@ -86,7 +80,7 @@
 		y:
 			position.y % snappingArea! > snappingThreshold
 				? roundWidgetSpec('up', 'y')
-				: roundWidgetSpec('down', 'y'),
+				: roundWidgetSpec('down', 'y')
 	});
 
 	const adjustedSize = (size: ISize): ISize => ({
@@ -97,7 +91,7 @@
 		height:
 			size.height % snappingArea! > snappingThreshold
 				? roundWidgetSpec('up', 'height')
-				: roundWidgetSpec('down', 'height'),
+				: roundWidgetSpec('down', 'height')
 	});
 
 	const snappingHint: ISize & IPosition = $derived.by(() => {
@@ -105,20 +99,20 @@
 			return {
 				...adjustedPosition({ x: widget.x, y: widget.y }),
 				width: widget.width,
-				height: widget.height,
+				height: widget.height
 			};
 		} else if (resizing) {
 			return {
 				...adjustedSize({ width: widget.width, height: widget.height }),
 				x: widget.x,
-				y: widget.y,
+				y: widget.y
 			};
 		} else {
 			return {
 				x: widget.x,
 				y: widget.y,
 				width: widget.width,
-				height: widget.height,
+				height: widget.height
 			};
 		}
 	});
@@ -127,7 +121,7 @@
 	let editingThisWidget: boolean = $state(false);
 	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
 
-	let currentSnapHint: IPosition = { x: widget.x, y: widget.y };
+	//let currentSnapHint: IPosition = { x: widget.x, y: widget.y };
 
 	const WIDGET = {
 		move: {
@@ -157,22 +151,33 @@
 				widget.x -= cursorWidgetAnchor.x - event.offsetX;
 				widget.y -= cursorWidgetAnchor.y - event.offsetY;
 
+				/*
 				if (
 					currentSnapHint.x !== snappingHint.x ||
 					currentSnapHint.y !== snappingHint.y
 				) {
 					currentSnapHint.x = snappingHint.x;
 					currentSnapHint.y = snappingHint.y;
-					widgets = new ShiftWidgets(
-						widget,
+
+					const _widgets = new ShiftWidgets(
+						{ ...widget },
 						{ x: snappingHint.x, y: snappingHint.y },
-						widgets,
+						[...widgets],
 						containerSize,
-						snappingArea!,
+						snappingArea!
 					).shifted;
 
-					console.log('SHIFTED!');
+					const indexOfMoving = _widgets.findIndex(
+						(w: IWidget) => w.id === widget.id
+					);
+					_widgets[indexOfMoving].x = widget.x;
+					_widgets[indexOfMoving].y = widget.y;
+
+					widgets = _widgets;
+
+					console.log('[LOG] New hint position.');
 				}
+				*/
 			},
 			handleMouseLeave: function (event: MouseEvent) {
 				if (!moving || !editing || !editingThisWidget) return;
@@ -182,7 +187,7 @@
 				widget.y = snappingHint.y;
 				moving = false;
 				editingThisWidget = false;
-			},
+			}
 		},
 		resize: {
 			handleMouseDown: function () {
@@ -202,13 +207,13 @@
 				if (!resizing || !editing || !editingThisWidget) return;
 				widget.width = currentWidgetSize.width;
 				widget.height = currentWidgetSize.height;
-			},
+			}
 		},
 		remove: function (event: MouseEvent) {
 			event.preventDefault();
 			event.stopPropagation();
 			funcs?.onWidgetRemove?.(widget.id);
-		},
+		}
 	};
 </script>
 

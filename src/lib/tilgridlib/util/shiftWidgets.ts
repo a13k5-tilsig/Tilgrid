@@ -3,7 +3,7 @@ import {
 	makeMatrix,
 	findAvailablePosition,
 	fromPxToMatrixCells,
-	fromMatrixCellsToPx,
+	fromMatrixCellsToPx
 } from './widget';
 
 type IWidgetMap = Record<string, number[][]>;
@@ -42,7 +42,7 @@ function sortMatrixWidgetsByPosition(widgets: IWidget[]): IWidget[] {
  */
 function getMappedMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number,
+	matrixCellSize: number
 ): IWidgetMap {
 	let occupiedMatrixCellsMap: IWidgetMap = {};
 	widgets.forEach((w: IWidget) => {
@@ -58,7 +58,7 @@ function getMappedMatrixCellCoordinatesFromWidgets(
 				}
 				occupiedMatrixCellsMap[w.id].push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + wi,
+					widgetMatrixPositionFromLeft + wi
 				]);
 			}
 		}
@@ -76,16 +76,16 @@ function getMappedMatrixCellCoordinatesFromWidgets(
  */
 function fillOccupiedMatrixCellsWithWidgetId(
 	matrix: number[][],
-	widgetMap: IWidgetMap,
+	widgetMap: IWidgetMap
 ): IWidgetMatrixCollision {
 	let _matrix: IWidgetMatrixCollision = {
 		collidingId: null,
-		matrix: [...matrix],
+		matrix: [...matrix]
 	};
 	Object.entries(widgetMap).forEach(([id, coordinates]) => {
 		coordinates.forEach((c: number[]) => {
 			if (_matrix.matrix[c[0]][c[1]] !== 0 && _matrix.collidingId === null) {
-				_matrix.collidingId = id;
+				_matrix.collidingId = _matrix.matrix[c[0]][c[1]].toString();
 			}
 			_matrix.matrix[c[0]][c[1]] = id;
 		});
@@ -104,7 +104,7 @@ function fillOccupiedMatrixCellsWithWidgetId(
 function fillOccupiedMatrixCells(
 	matrix: number[][],
 	cellCoordinates: any[][],
-	filler: any = 1,
+	filler: any = 1
 ): number[][] {
 	let _matrix: number[][] = [...matrix];
 	cellCoordinates.forEach((n: number[]) => {
@@ -127,15 +127,15 @@ export class ShiftWidgets {
 	occupiedCellCoordinates: IWidgetMap;
 	occupiedCells: IWidgetMatrixCollision;
 
-	widgetsToShift: IWidget[];
 	widgetsToStay: IWidget[];
+	widgetsToShift: IWidget[];
 
 	constructor(
 		movingWidget: IWidget,
 		suggestedPos: IPosition,
 		widgets: IWidget[],
 		containerSize: ISize,
-		matrixCellSize: number,
+		matrixCellSize: number
 	) {
 		this.movingWidget = movingWidget;
 		this.suggestedPos = suggestedPos;
@@ -159,65 +159,124 @@ export class ShiftWidgets {
 		// [1] Sort the widgets by their position, for predictable order-of-operation.
 		this.sortedWidgets = sortMatrixWidgetsByPosition(this.widgets);
 
-		// [2] Make a matrix matching the conatiner.
+		// Modify the moving widget to be set to it's snapping hint.
+		const indexOfMoving = this.sortedWidgets.findIndex(
+			(w: IWidget) => w.id === this.movingWidget.id
+		);
+		this.sortedWidgets[indexOfMoving].x = this.suggestedPos.x;
+		this.sortedWidgets[indexOfMoving].y = this.suggestedPos.y;
+
+		// [2] Make a matrix matching the container.
 		this.containerMatrix = makeMatrix(
 			fromPxToMatrixCells(this.containerSize.width, this.matrixCellSize),
-			fromPxToMatrixCells(this.containerSize.height, this.matrixCellSize),
+			fromPxToMatrixCells(this.containerSize.height, this.matrixCellSize)
 		);
 
 		// [3] Map all occupied matrix cells to their widget IDs.
 		this.occupiedCellCoordinates = getMappedMatrixCellCoordinatesFromWidgets(
 			this.sortedWidgets,
-			this.matrixCellSize,
+			this.matrixCellSize
+		);
+
+		console.log(
+			'[LOG] Set occupied cell coordinates: ',
+			JSON.stringify(this.occupiedCellCoordinates)
 		);
 
 		// [4] Write the IDs of the widgets to the cells they occupy.
 		this.occupiedCells = fillOccupiedMatrixCellsWithWidgetId(
 			this.containerMatrix,
-			this.occupiedCellCoordinates,
+			this.occupiedCellCoordinates
+		);
+
+		console.log(
+			'[LOG] Set occupied cells: ',
+			JSON.stringify(this.occupiedCells)
 		);
 
 		// [5] Act on a widget-collision.
-		if (this.occupiedCells.collidingId != null) {
-			console.log('COLLISION WITH: ', this.occupiedCells.collidingId);
+		if (
+			this.occupiedCells.collidingId !== null &&
+			this.occupiedCells.collidingId !== this.movingWidget.id
+		) {
+			console.log(
+				'[LOG]',
+				this.movingWidget.id,
+				'colliding with:',
+				this.widgets.find((w) => w.id === this.occupiedCells.collidingId)!.id
+			);
 
-			// Remove the moving widget from the array to avoid conflict for now.
+			// Remove the moving widget from the array to avoid it getting sliced away.
 			const indexOfMoving = this.sortedWidgets.findIndex(
-				(w: IWidget) => w.id === this.movingWidget.id,
+				(w: IWidget) => w.id === this.movingWidget.id
 			);
 			this.sortedWidgets.splice(indexOfMoving);
 
 			const collidingIndex = this.sortedWidgets.findIndex(
-				(w) => w.id === this.occupiedCells.collidingId,
+				(w) => w.id === this.occupiedCells.collidingId
 			);
 
-			this.widgetsToShift = this.sortedWidgets.slice(collidingIndex);
 			this.widgetsToStay = this.sortedWidgets.slice(0, collidingIndex);
+			this.widgetsToShift = this.sortedWidgets.slice(collidingIndex);
+
+			console.log(
+				'\t[+] Widgets to shift: ',
+				JSON.stringify(this.widgetsToShift),
+				'\t[+] Widgets to stay: ',
+				JSON.stringify(this.widgetsToStay)
+			);
+
+			// Add the moving widget back to the array, hacked to the snapped position for now.
+			this.widgetsToStay.push({
+				...this.movingWidget,
+				x: this.suggestedPos.x,
+				y: this.suggestedPos.y
+			});
 
 			this.sequantialShift();
 		}
 	}
 
 	sequantialShift() {
-		console.log('running sequantialShift!');
-		console.log('widgetsToShift: ', JSON.stringify(this.widgetsToShift));
+		console.log('[LOG] Running sequantial shift...');
 
 		this.widgetsToShift.forEach((w: IWidget) => {
 			const newPosition = findAvailablePosition(
 				this.containerSize,
 				{ width: w.width, height: w.height },
 				this.matrixCellSize,
-				this.widgetsToStay,
+				this.widgetsToStay
 			);
 
+			console.log(
+				'[LOG] New position suggested for: ',
+				w.id,
+				JSON.stringify(newPosition)
+			);
+
+			// Moving the widget to stay will redraw the matrix occupancies.
 			this.widgetsToStay.push({
 				...w,
 				x: newPosition.x,
-				y: newPosition.y,
+				y: newPosition.y
 			});
+
+			console.log(
+				'[LOG] Widgets to stay now: ',
+				JSON.stringify(this.widgetsToStay)
+			);
 		});
 
-		this.sortedWidgets = [...this.widgetsToStay, this.movingWidget];
+		//const newWidgetCollection = [...this.widgetsToStay, this.movingWidget];
+
+		/*
+		console.log(
+			'[LOG] The new widget collection:',
+			JSON.stringify(newWidgetCollection)
+		);
+		*/
+
+		this.sortedWidgets = this.widgetsToStay;
 	}
 
 	get shifted() {

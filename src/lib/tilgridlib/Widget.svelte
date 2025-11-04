@@ -3,35 +3,26 @@
 	import type { IWidgetConfig } from './types/config';
 	import XIcon from './XIcon.svelte';
 	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
-	//import { ShiftWidgets } from './util/shiftWidgets';
-
-	/*
-	 * TODO:
-	 * + Add self-adjustment on out-of-bounds after container resize.
-	 * + Add vertical stretchability, for new and moving widgets.
-	 *
-	 * + Add "undo" feature by saving the current specs before updating the config.
-	 *
-	 * + Add collision mechanism.
-	 * + Add ability to make the widget container vertically dynamic.
-	 * + Add min / max widget size (bind with rendered child?)
-	 * + Add style option; when resizing, only resize a dotted "border" before
-	 *   actually resizing the widget when letting go of the cursor.
-	 */
+	import MoveResizeMask from './MoveResizeMask.svelte';
 
 	let {
 		widgets = $bindable(),
 		widget = $bindable(),
 		moving = $bindable(),
 		resizing = $bindable(),
+		useDefaultMoveMask,
+		useDefaultResizeMask,
 		containerSize,
 		snappingArea,
-		snappingAnimTime,
 		editing,
 		widgetSpace,
 		funcs,
+		movingMask,
+		resizingMask,
 		children
-	}: IWidgetConfig & { widgets: IWidget[] } = $props();
+	}: IWidgetConfig & {
+		widgets: IWidget[];
+	} = $props();
 
 	type IDirection = 'up' | 'down';
 	type IXAxis = 'x' | 'width';
@@ -121,8 +112,6 @@
 	let editingThisWidget: boolean = $state(false);
 	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
 
-	//let currentSnapHint: IPosition = { x: widget.x, y: widget.y };
-
 	const WIDGET = {
 		move: {
 			handleMouseDown: function (event: MouseEvent) {
@@ -150,34 +139,6 @@
 				event.stopPropagation();
 				widget.x -= cursorWidgetAnchor.x - event.offsetX;
 				widget.y -= cursorWidgetAnchor.y - event.offsetY;
-
-				/*
-				if (
-					currentSnapHint.x !== snappingHint.x ||
-					currentSnapHint.y !== snappingHint.y
-				) {
-					currentSnapHint.x = snappingHint.x;
-					currentSnapHint.y = snappingHint.y;
-
-					const _widgets = new ShiftWidgets(
-						{ ...widget },
-						{ x: snappingHint.x, y: snappingHint.y },
-						[...widgets],
-						containerSize,
-						snappingArea!
-					).shifted;
-
-					const indexOfMoving = _widgets.findIndex(
-						(w: IWidget) => w.id === widget.id
-					);
-					_widgets[indexOfMoving].x = widget.x;
-					_widgets[indexOfMoving].y = widget.y;
-
-					widgets = _widgets;
-
-					console.log('[LOG] New hint position.');
-				}
-				*/
 			},
 			handleMouseLeave: function (event: MouseEvent) {
 				if (!moving || !editing || !editingThisWidget) return;
@@ -223,9 +184,8 @@
 	class:on-top={editingThisWidget}
 	style:width="{snappingHint.width}px"
 	style:height="{snappingHint.height}px"
-	style:opacity={editingThisWidget ? 0.4 : 0}
 	style:transform="translateX({snappingHint.x}px) translateY({snappingHint.y}px)"
-	style="--transition-time: calc({snappingAnimTime}ms / 2)"
+	style:opacity={moving || resizing ? '0.8' : '0'}
 ></div>
 
 <div
@@ -241,7 +201,6 @@
 	style:padding="{widgetSpace}px"
 	style:opacity={editingThisWidget ? '0.8' : '1'}
 	style:transform="translateX({widget.x}px) translateY({widget.y}px)"
-	style="--transition-time: {snappingAnimTime}ms"
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
@@ -268,6 +227,19 @@
 				onmousemove={WIDGET.move.handleMouseMove}
 				onmouseleave={WIDGET.move.handleMouseLeave}
 			></div>
+			{#if moving && editingThisWidget}
+				{#if useDefaultResizeMask}
+					<MoveResizeMask type={'move'} />
+				{:else}
+					{@render movingMask?.()}
+				{/if}
+			{:else if resizing && editingThisWidget}
+				{#if useDefaultMoveMask}
+					<MoveResizeMask type={'resize'} />
+				{:else}
+					{@render resizingMask?.()}
+				{/if}
+			{/if}
 		{/if}
 
 		{#if !!children}
@@ -288,12 +260,6 @@
 		align-items: center;
 	}
 
-	.ease-snapping {
-		transition-property: width, height, transform, opacity !important;
-		transition-timing-function: ease-in-out;
-		transition-duration: var(--transition-time);
-	}
-
 	#snapping-hint,
 	#widget-wrapper,
 	#widget-mask,
@@ -308,18 +274,32 @@
 	}
 
 	#snapping-hint {
-		background-color: #443443;
+		background-color: var(--snapping-hint-bg, gray);
+		border-radius: var(--widget-editing-border-radius, 6px);
+	}
+
+	#snapping-hint.ease-snapping {
+		transition-property: width, height, transform, opacity !important;
+		transition-timing-function: ease-in-out;
+		transition-duration: calc(var(--snapping-anim-time, 200ms) / 2);
 	}
 
 	#widget-wrapper {
 		box-sizing: border-box;
-		transition: opacity var(--transition-time) ease-in-out;
+		transition: opacity var(--snapping-anim-time, 200ms) ease-in-out;
+		border-radius: var(--widget-editing-border-radius, 6px);
 	}
 
 	#widget-wrapper.editing {
-		background-color: lightgray;
+		background-color: var(--widget-editing-border-color, lightgray);
 		overflow: auto;
 		resize: both;
+	}
+
+	#widget-wrapper.ease-snapping {
+		transition-property: width, height, transform, opacity !important;
+		transition-timing-function: ease-in-out;
+		transition-duration: var(--snapping-anim-time, 200ms);
 	}
 
 	#widget-mask {
@@ -330,22 +310,24 @@
 
 	#widget-frame {
 		position: relative;
+		border-radius: var(--widget-border-radius, 5px);
 		overflow: hidden;
 	}
 
 	button#delete-button {
 		z-index: 3;
-		background-color: pink;
+		background-color: var(--delete-button-init-bg, pink);
 		top: 0;
 		right: 0;
 		width: 20px;
 		height: 20px;
 		padding: 0;
-		border: 2px solid white;
+		border: 2px solid var(--widget-editing-border-color, lightgray);
+		border-radius: var(--delete-button-border-radius, 6px);
 		outline: none;
 		cursor: pointer;
 		&:hover {
-			background-color: red;
+			background-color: var(--delete-button-hover-bg, red);
 		}
 	}
 </style>

@@ -4,6 +4,8 @@
 	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
+	import ResizeIcon from '$lib/tilgridlib/ResizeIcon.svelte';
+	import MoveResizeMask from '$lib/tilgridlib/MoveResizeMask.svelte';
 
 	let containerSize: ISize = $state({ width: 0, height: 0 });
 
@@ -27,12 +29,11 @@
 	]);
 
 	const config: IContainerConfig = $state({
-		width: '100%',
-		height: '100%',
 		editing: true,
 		snappingArea: 50,
+		useDefaultResizeMask: true,
+		useDefaultMoveMask: true,
 		snappingAnimTime: 200,
-		horizontallyDynamic: false,
 		widgetSpace: 10,
 		funcs: {
 			onWidgetRemove: function (id?: string) {

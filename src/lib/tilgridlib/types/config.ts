@@ -29,12 +29,6 @@ export interface IContainerConfig {
 	// Use the provided resizing mask?
 	useDefaultResizeMask?: boolean;
 
-	// Mask the widget content while the widget is moving.
-	movingMask?: Snippet;
-
-	// Mask the widget content while the widget is resizing.
-	resizingMask?: Snippet;
-
 	// You custom functions to run after certain events.
 	funcs?: IFuncs;
 }
@@ -46,8 +40,6 @@ export interface IWidgetConfig
 		| 'editing'
 		| 'widgetSpace'
 		| 'funcs'
-		| 'movingMask'
-		| 'resizingMask'
 		| 'useDefaultMoveMask'
 		| 'useDefaultResizeMask'
 	> {

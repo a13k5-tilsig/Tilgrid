@@ -5,6 +5,10 @@
 - [x] Better styling and styling configuration options (var's).
 
 - [ ] Add "Partial shifting"; don't let widgets overlap, keep the previous position until a new (valid) one is found.
+- [ ] Add some border and shadow to Tap widgets.
+- [ ] Add meta-data to picture widget in Tap.
+- [ ] Add proper click-to-scroll in picture-carousel widget in Tap.
+- [ ] Search for bugs in Dashboard.
 
 - [ ] Add some delay before snapp-hint disappears when widget snapps back.
 

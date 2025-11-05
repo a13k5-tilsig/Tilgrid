@@ -31,7 +31,6 @@
 		snappingArea: 50,
 		useDefaultResizeMask: true,
 		useDefaultMoveMask: true,
-		snappingAnimTime: 200,
 		widgetSpace: 10,
 		funcs: {
 			onWidgetRemove: function (id?: string) {
@@ -72,6 +71,9 @@
 </div>
 
 <style>
+	:global(:root) {
+		--snapping-anim-time: 100ms;
+	}
 	:global(html, body) {
 		margin: 0;
 		padding: 0;

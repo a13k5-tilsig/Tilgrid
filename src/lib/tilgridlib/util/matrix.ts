@@ -1,4 +1,4 @@
-import type { IPosition, ISize, IWidget } from '../types/widget';
+import type { IPosition, ISize, IWidget, ISpec } from '../types/widget';
 
 /*
  * Convert a given amount of pixels into its value in matrix cells.
@@ -99,6 +99,37 @@ function getMatrixCellCoordinatesFromWidgets(
 
 	return occupiedMatrixCells;
 }
+
+export function isCollidingWithOtherWidget(
+	widget: IWidget,
+	widgets: IWidget[],
+	matrixCellSize: number, 
+	spec: ISpec,
+) {
+	const _widgets = [...widgets];
+
+	// remove the moving widget from the match, to avoid matching with self.
+	const indexOfWidget = _widgets.findIndex((w) => w.id === widget.id);
+	_widgets.splice(indexOfWidget, 1);
+
+	const withNewSpec: IWidget = { ...widget, ...spec };
+
+	const otherOccupied = getMatrixCellCoordinatesFromWidgets(_widgets, matrixCellSize);
+	const widgetOccupied = getMatrixCellCoordinatesFromWidgets([withNewSpec], matrixCellSize);
+
+	for (let i = 0; i < widgetOccupied.length; i++) {
+		const iy = widgetOccupied[i][0];
+		const ix = widgetOccupied[i][1];
+		for (let j = 0; j < otherOccupied.length; j++) {
+			const jy = otherOccupied[j][0];
+			const jx = otherOccupied[j][1];
+			if (iy === jy && ix === jx) return true;
+		}
+	}
+
+	return false;
+}
+
 
 /**
  *

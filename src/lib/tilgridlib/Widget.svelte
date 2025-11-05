@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { IWidgetConfig } from './types/config';
-	import type { IPosition, ISize, IWidget } from './types/widget';
+	import type { IPosition, ISize, IWidget, ISpec } from './types/widget';
+	import { isCollidingWithOtherWidget } from './util/matrix';
 	import XIcon from './default/XIcon.svelte';
 	import MoveResizeMask from './default/MoveResizeMask.svelte';
 	import WidgetPlaceholder from './default/WidgetPlaceholder.svelte';
@@ -58,7 +59,6 @@
 		if (specIsOutOfBounds(widgetCopy, prop)) {
 			return lastSuggestedSnapp[prop];
 		} else {
-			lastSuggestedSnapp[prop] = widgetCopy[prop];
 			return widgetCopy[prop];
 		}
 	}
@@ -85,32 +85,35 @@
 				: roundWidgetSpec('down', 'height')
 	});
 
-	const snappingHint: ISize & IPosition = $derived.by(() => {
-		if (moving) {
-			return {
-				...adjustedPosition({ x: widget.x, y: widget.y }),
-				width: widget.width,
-				height: widget.height
-			};
-		} else if (resizing) {
-			return {
-				...adjustedSize({ width: widget.width, height: widget.height }),
-				x: widget.x,
-				y: widget.y
-			};
-		} else {
-			return {
-				x: widget.x,
-				y: widget.y,
-				width: widget.width,
-				height: widget.height
-			};
-		}
-	});
-
 	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
 	let editingThisWidget: boolean = $state(false);
 	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
+
+	const snappingHint: (ISize & IPosition) | undefined = $derived.by(() => {
+		if (editingThisWidget && (moving || resizing)) {
+			let newSpec: ISpec = lastSuggestedSnapp;
+
+			if (editingThisWidget && moving) {
+				newSpec = {
+					...adjustedPosition({ x: widget.x, y: widget.y }),
+					width: widget.width,
+					height: widget.height
+				};
+			} else if (editingThisWidget && resizing) {
+				newSpec = {
+					...adjustedSize({ width: widget.width, height: widget.height }),
+					x: widget.x,
+					y: widget.y
+				};
+			}
+			if (
+				!isCollidingWithOtherWidget(widget, widgets, snappingArea!, newSpec)
+			) {
+				lastSuggestedSnapp = newSpec;
+				return newSpec;
+			}
+		}
+	});
 
 	const WIDGET = {
 		move: {
@@ -127,8 +130,8 @@
 				if (!editing) return;
 				event.preventDefault();
 				event.stopPropagation();
-				widget.x = snappingHint.x;
-				widget.y = snappingHint.y;
+				widget.x = snappingHint?.x ?? lastSuggestedSnapp.x;
+				widget.y = snappingHint?.y ?? lastSuggestedSnapp.y;
 				moving = false;
 				editingThisWidget = false;
 				funcs?.onWidgetMove?.(widget.id);
@@ -144,8 +147,8 @@
 				if (!moving || !editing || !editingThisWidget) return;
 				event.preventDefault();
 				event.stopPropagation();
-				widget.x = snappingHint.x;
-				widget.y = snappingHint.y;
+				widget.x = snappingHint?.x ?? lastSuggestedSnapp.x;
+				widget.y = snappingHint?.y ?? lastSuggestedSnapp.y;
 				moving = false;
 				editingThisWidget = false;
 			}
@@ -158,8 +161,8 @@
 			},
 			handleMouseUp: function () {
 				if (!resizing || !editing || !editingThisWidget) return;
-				widget.width = snappingHint.width;
-				widget.height = snappingHint.height;
+				widget.width = snappingHint?.width ?? lastSuggestedSnapp.width;
+				widget.height = snappingHint?.height ?? lastSuggestedSnapp.height;
 				resizing = false;
 				editingThisWidget = false;
 				funcs?.onWidgetResize?.(widget.id);
@@ -182,9 +185,10 @@
 	id="snapping-hint"
 	class="ease-snapping"
 	class:on-top={editingThisWidget}
-	style:width="{snappingHint.width}px"
-	style:height="{snappingHint.height}px"
-	style:transform="translateX({snappingHint.x}px) translateY({snappingHint.y}px)"
+	style:width="{snappingHint?.width ?? lastSuggestedSnapp.width}px"
+	style:height="{snappingHint?.height ?? lastSuggestedSnapp.height}px"
+	style:transform="translateX({snappingHint?.x ?? lastSuggestedSnapp.x}px)
+	translateY({snappingHint?.y ?? lastSuggestedSnapp.y}px)"
 	style:opacity={moving || resizing ? '0.8' : '0'}
 ></div>
 
@@ -229,10 +233,7 @@
 				onmouseleave={WIDGET.move.handleMouseLeave}
 			></div>
 
-			<div
-				class="move-resize-mask"
-				style:opacity={"1"}
-			>
+			<div class="move-resize-mask" style:opacity={'1'}>
 				{#if useDefaultResizeMask}
 					<MoveResizeMask type={'move'} />
 				{:else}
@@ -338,8 +339,8 @@
 		background-color: var(--delete-button-init-bg, pink);
 		top: 0;
 		right: 0;
-		width: 20px;
-		height: 20px;
+		height: var(--delete-button-size, 30px);
+		aspect-ratio: 1 / 1;
 		padding: 0;
 		border: 2px solid var(--widget-editing-border-color, lightgray);
 		border-radius: var(--delete-button-border-radius, 10px);

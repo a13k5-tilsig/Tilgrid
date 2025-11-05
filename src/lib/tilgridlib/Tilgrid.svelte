@@ -9,7 +9,9 @@
 		snappingArea: 50,
 		hints: true,
 		centerSnappableLimit: true,
-		widgetSpace: 5
+		widgetSpace: 5,
+		useDefaultMoveMask: false,
+		useDefaultResizeMask: false,
 	};
 
 	interface Props extends IContainerConfig {
@@ -107,6 +109,7 @@
 		--widget-editing-border-color: lightgray;
 		--widget-editing-border-radius: 10px 10px 3px 10px;
 
+		--delete-button-size: 30px;
 		--delete-button-border-radius: 6px;
 		--delete-button-init-bg: pink;
 		--delete-button-hover-bg: red;

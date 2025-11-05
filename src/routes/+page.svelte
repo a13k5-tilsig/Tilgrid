@@ -46,7 +46,8 @@
 			{ width: containerSize.width, height: containerSize.height },
 			{ width: 400, height: 300 },
 			config.snappingArea!,
-			widgets
+			widgets,
+			config.verticallyDynamic
 		);
 
 		widgets.push({

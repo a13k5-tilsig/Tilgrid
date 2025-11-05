@@ -121,7 +121,8 @@ export function findAvailablePosition(
 	containerSize: ISize,
 	widgetSize: ISize,
 	snappingArea: number,
-	widgets: IWidget[]
+	widgets: IWidget[],
+	verticallyDynamic: boolean = false
 ): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.height, snappingArea),
@@ -167,6 +168,33 @@ export function findAvailablePosition(
 					x: fromMatrixCellsToPx(tw, snappingArea),
 					y: fromMatrixCellsToPx(th, snappingArea)
 				};
+			}
+		}
+	}
+
+	// Try to shrink the window and scan the bottom of the target to find a fit.
+	if (verticallyDynamic) {
+		let shrinkingWindowMatrix: number[][] = [ ...widgetMatrix];
+		let shrinkingWindowStringified: string = "";
+
+		for (let th = targetHeight; th <= filledMatrix.length; th++) {
+			shrinkingWindowMatrix.pop();
+			shrinkingWindowStringified = JSON.stringify(shrinkingWindowMatrix);
+
+			for (let tw = 0; tw <= targetWidth; tw++) {
+				let window: number[][] = [];
+
+				// Window height, slicing for window width.
+				for (let wh = shrinkingWindowMatrix.length; wh > 0; wh--) {
+					window.push(filledMatrix[th + wh].slice(tw, tw + windowWidth));
+				}
+
+				if (JSON.stringify(window) === shrinkingWindowStringified) {
+					return {
+						x: fromMatrixCellsToPx(tw, snappingArea),
+						y: fromMatrixCellsToPx(th + 1, snappingArea)
+					};
+				}
 			}
 		}
 	}

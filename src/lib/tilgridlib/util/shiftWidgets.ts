@@ -3,7 +3,7 @@ import {
 	makeMatrix,
 	findAvailablePosition,
 	fromPxToMatrixCells,
-} from './widget';
+} from './matrix';
 
 type IWidgetMap = Record<string, number[][]>;
 type IWidgetIdMatrix = (number | string)[][];

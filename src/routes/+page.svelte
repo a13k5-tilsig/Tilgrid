@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ISize, IWidget } from '$lib/tilgridlib/types/widget';
 	import type { IContainerConfig } from '$lib/tilgridlib/types/config';
-	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
+	import { findAvailablePosition } from '$lib/tilgridlib/util/matrix';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
 

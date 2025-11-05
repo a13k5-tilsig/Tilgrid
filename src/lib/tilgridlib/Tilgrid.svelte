@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { IContainerConfig } from './types/config.ts';
+	import type { IContainerConfig } from './types/config';
 	import type { IWidget, ISize, IFuncs } from './types/widget';
 	import Widget from './Widget.svelte';
 

@@ -94,38 +94,38 @@
 <style>
 	/*
 	:global(:root) {
-		--container-bg: unset;
-		--container-width: 100%;
-		--container-height: 100%;
+		--tg-container-bg: unset;
+		--tg-container-width: 100%;
+		--tg-container-height: 100%;
 		
-		--snappable-container-bg: unset;
-		--snappable-container-hints: black;
-		--snapping-anim-time: 200ms;
-		--snapping-hint-bg: gray;
+		--tg-snappable-container-bg: unset;
+		--tg-snappable-container-hints: black;
+		--tg-snapping-anim-time: 200ms;
+		--tg-snapping-hint-bg: gray;
 
-		--widget-border-radius: 3px;
-		--widget-editing-border-color: lightgray;
-		--widget-editing-border-radius: 10px 10px 3px 10px;
+		--tg-widget-border-radius: 3px;
+		--tg-widget-editing-border-color: lightgray;
+		--tg-widget-editing-border-radius: 10px 10px 3px 10px;
 
-		--delete-button-size: 25px;
-		--delete-button-border-radius: 6px;
-		--delete-button-init-bg: pink;
-		--delete-button-hover-bg: red;
+		--tg-delete-button-size: 25px;
+		--tg-delete-button-border-radius: 6px;
+		--tg-delete-button-init-bg: pink;
+		--tg-delete-button-hover-bg: red;
 	}
 	*/
 
 	#container-wrapper {
-		width: var(--container-width, 100%);
-		height: var(--container-height, 100%);
-		background-color: var(--container-bg, unset);
+		width: var(--tg-container-width, 100%);
+		height: var(--tg-container-height, 100%);
+		background-color: var(--tg-container-bg, unset);
 		position: relative;
 		border: 1px solid transparent;
 	}
 
 	#container-snappable-limit {
 		border: 1px solid transparent;
-		transition: width var(--snapping-anim-time, 200ms) ease-in-out;
-		background-color: var(--snappable-container-bg, unset);
+		transition: width var(--tg-snapping-anim-time, 200ms) ease-in-out;
+		background-color: var(--tg-snappable-container-bg, unset);
 	}
 
 	.center {
@@ -136,7 +136,7 @@
 
 	.snapp-hints {
 		background-image: radial-gradient(
-			var(--snappable-container-hints, black) 1px,
+			var(--tg-snappable-container-hints, black) 1px,
 			transparent 0
 		);
 		background-size: var(--snapping-area) var(--snapping-area);

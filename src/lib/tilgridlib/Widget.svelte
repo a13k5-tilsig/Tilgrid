@@ -276,7 +276,7 @@
 		left: 0;
 		height: 100%;
 		width: 100%;
-		transition: opacity var(--snapping-anim-time, 200ms) ease-in-out;
+		transition: opacity var(--tg-snapping-anim-time, 200ms) ease-in-out;
 	}
 
 	#snapping-hint,
@@ -293,24 +293,24 @@
 	}
 
 	#snapping-hint {
-		background-color: var(--snapping-hint-bg, gray);
-		border-radius: var(--widget-editing-border-radius, 10px 10px 3px 10px);
+		background-color: var(--tg-snapping-hint-bg, gray);
+		border-radius: var(--tg-widget-editing-border-radius, 10px 10px 3px 10px);
 	}
 
 	#snapping-hint.ease-snapping {
 		transition-property: width, height, transform, opacity !important;
 		transition-timing-function: ease-in-out;
-		transition-duration: calc(var(--snapping-anim-time, 200ms) / 2);
+		transition-duration: calc(var(--tg-snapping-anim-time, 200ms) / 2);
 	}
 
 	#widget-wrapper {
 		box-sizing: border-box;
-		transition: opacity var(--snapping-anim-time, 200ms) ease-in-out;
-		border-radius: var(--widget-editing-border-radius, 10px 10px 3px 10px);
+		transition: opacity var(--tg-snapping-anim-time, 200ms) ease-in-out;
+		border-radius: var(--tg-widget-editing-border-radius, 10px 10px 3px 10px);
 	}
 
 	#widget-wrapper.editing {
-		background-color: var(--widget-editing-border-color, lightgray);
+		background-color: var(--tg-widget-editing-border-color, lightgray);
 		overflow: auto;
 		resize: both;
 	}
@@ -318,7 +318,7 @@
 	#widget-wrapper.ease-snapping {
 		transition-property: width, height, transform, opacity !important;
 		transition-timing-function: ease-in-out;
-		transition-duration: var(--snapping-anim-time, 200ms);
+		transition-duration: var(--tg-snapping-anim-time, 200ms);
 	}
 
 	#widget-mask {
@@ -329,24 +329,24 @@
 
 	#widget-frame {
 		position: relative;
-		border-radius: var(--widget-border-radius, 5px);
+		border-radius: var(--tg-widget-border-radius, 5px);
 		overflow: hidden;
 	}
 
 	button#delete-button {
 		z-index: 3;
-		background-color: var(--delete-button-init-bg, pink);
+		background-color: var(--tg-delete-button-init-bg, pink);
 		top: 0;
 		right: 0;
-		width: var(--delete-button-size, 25px);
+		width: var(--tg-delete-button-size, 25px);
 		aspect-ratio: 1 / 1;
 		padding: 0;
-		border: 2px solid var(--widget-editing-border-color, lightgray);
-		border-radius: var(--delete-button-border-radius, 10px);
+		border: 2px solid var(--tg-widget-editing-border-color, lightgray);
+		border-radius: var(--tg-delete-button-border-radius, 10px);
 		outline: none;
 		cursor: pointer;
 		&:hover {
-			background-color: var(--delete-button-hover-bg, red);
+			background-color: var(--tg-delete-button-hover-bg, red);
 		}
 	}
 </style>

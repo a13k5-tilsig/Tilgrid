@@ -1,7 +1,7 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { IContainerConfig } from './types/config.ts';
 	import type { IWidget, ISize, IFuncs } from './types/widget';
-	import type { Snippet } from 'svelte';
 	import Widget from './Widget.svelte';
 
 	const DEFAULT: IContainerConfig = {
@@ -43,8 +43,6 @@
 	);
 
 	const SNAPP_HINT_OVERFLOW_COMPANSATION = 2;
-
-	// FIX: snapping container sometimes not centering inside parent.
 
 	const crimpedContainerSize: ISize = $derived({
 		width:
@@ -96,9 +94,9 @@
 <style>
 	/*
 	:global(:root) {
+		--container-bg: unset;
 		--container-width: 100%;
 		--container-height: 100%;
-		--container-bg: unset;
 		
 		--snappable-container-bg: unset;
 		--snappable-container-hints: black;
@@ -107,7 +105,7 @@
 
 		--widget-border-radius: 3px;
 		--widget-editing-border-color: lightgray;
-		--widget-editing-border-radius: 6px;
+		--widget-editing-border-radius: 10px 10px 3px 10px;
 
 		--delete-button-border-radius: 6px;
 		--delete-button-init-bg: pink;
@@ -118,7 +116,7 @@
 	#container-wrapper {
 		width: var(--container-width, 100%);
 		height: var(--container-height, 100%);
-		background-color: var(--snappable-container-bg, unset);
+		background-color: var(--container-bg, unset);
 		position: relative;
 		border: 1px solid transparent;
 	}

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { IPosition, ISize, IWidget } from './types/widget';
 	import type { IWidgetConfig } from './types/config';
-	import XIcon from './XIcon.svelte';
-	import WidgetPlaceholder from './WidgetPlaceholder.svelte';
-	import MoveResizeMask from './MoveResizeMask.svelte';
+	import type { IPosition, ISize, IWidget } from './types/widget';
+	import XIcon from './default/XIcon.svelte';
+	import MoveResizeMask from './default/MoveResizeMask.svelte';
+	import WidgetPlaceholder from './default/WidgetPlaceholder.svelte';
 
 	let {
 		widgets = $bindable(),
@@ -204,6 +204,7 @@
 	onmousedown={WIDGET.resize.handleMouseDown}
 	onmouseup={WIDGET.resize.handleMouseUp}
 	onmousemove={WIDGET.resize.handleMouseMove}
+	ondblclick={(e) => e.preventDefault()}
 >
 	{#if !!funcs?.onWidgetRemove && editing}
 		<button
@@ -227,19 +228,28 @@
 				onmousemove={WIDGET.move.handleMouseMove}
 				onmouseleave={WIDGET.move.handleMouseLeave}
 			></div>
-			{#if moving && editingThisWidget}
+
+			<div
+				class="move-resize-mask"
+				style:opacity={"1"}
+			>
 				{#if useDefaultResizeMask}
 					<MoveResizeMask type={'move'} />
 				{:else}
 					{@render movingMask?.()}
 				{/if}
-			{:else if resizing && editingThisWidget}
+			</div>
+
+			<div
+				class="move-resize-mask"
+				style:opacity={editingThisWidget && resizing ? '1' : '0'}
+			>
 				{#if useDefaultMoveMask}
 					<MoveResizeMask type={'resize'} />
 				{:else}
 					{@render resizingMask?.()}
 				{/if}
-			{/if}
+			</div>
 		{/if}
 
 		{#if !!children}
@@ -260,6 +270,15 @@
 		align-items: center;
 	}
 
+	.move-resize-mask {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		transition: opacity var(--snapping-anim-time, 200ms) ease-in-out;
+	}
+
 	#snapping-hint,
 	#widget-wrapper,
 	#widget-mask,
@@ -275,7 +294,7 @@
 
 	#snapping-hint {
 		background-color: var(--snapping-hint-bg, gray);
-		border-radius: var(--widget-editing-border-radius, 6px);
+		border-radius: var(--widget-editing-border-radius, 10px 10px 3px 10px);
 	}
 
 	#snapping-hint.ease-snapping {
@@ -287,7 +306,7 @@
 	#widget-wrapper {
 		box-sizing: border-box;
 		transition: opacity var(--snapping-anim-time, 200ms) ease-in-out;
-		border-radius: var(--widget-editing-border-radius, 6px);
+		border-radius: var(--widget-editing-border-radius, 10px 10px 3px 10px);
 	}
 
 	#widget-wrapper.editing {
@@ -323,7 +342,7 @@
 		height: 20px;
 		padding: 0;
 		border: 2px solid var(--widget-editing-border-color, lightgray);
-		border-radius: var(--delete-button-border-radius, 6px);
+		border-radius: var(--delete-button-border-radius, 10px);
 		outline: none;
 		cursor: pointer;
 		&:hover {

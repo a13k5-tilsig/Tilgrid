@@ -1,11 +1,9 @@
 <script lang="ts">
-	import type { IContainerConfig } from '$lib/tilgridlib/types/config';
 	import type { ISize, IWidget } from '$lib/tilgridlib/types/widget';
+	import type { IContainerConfig } from '$lib/tilgridlib/types/config';
 	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
-	import ResizeIcon from '$lib/tilgridlib/ResizeIcon.svelte';
-	import MoveResizeMask from '$lib/tilgridlib/MoveResizeMask.svelte';
 
 	let containerSize: ISize = $state({ width: 0, height: 0 });
 

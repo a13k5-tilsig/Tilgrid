@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { IWidgetConfig } from './types/config';
 	import type { IPosition, ISize, IWidget } from './types/widget';
 	import XIcon from './default/XIcon.svelte';
@@ -12,6 +13,8 @@
 		resizing = $bindable(),
 		useDefaultMoveMask,
 		useDefaultResizeMask,
+		verticallyDynamic,
+		horizontallyDynamic,
 		containerSize,
 		snappingArea,
 		editing,
@@ -22,6 +25,10 @@
 		children
 	}: IWidgetConfig & {
 		widgets: IWidget[];
+		movingMask?: Snippet;
+		resizingMask?: Snippet;
+		verticallyDynamic?: boolean;
+		horizontallyDynamic?: boolean;
 	} = $props();
 
 	type IDirection = 'up' | 'down';
@@ -36,11 +43,23 @@
 		height: Math.floor(containerSize.height / snappingArea!) * snappingArea!
 	});
 
-	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean =>
-		spec == 'x' || spec == 'width'
-			? widget.x + widget.width > snappableContainerSize.width || widget.x < 0
-			: widget.y + widget.height > snappableContainerSize.height ||
-				widget.y < 0;
+	const specIsOutOfBounds = (widget: IWidget, spec: IAxis): boolean => {
+		if (
+			((spec == 'x' || spec == 'width') &&
+				widget[spec] > -1 &&
+				horizontallyDynamic) ||
+			((spec == 'y' || spec == 'height') &&
+				widget[spec] > -1 &&
+				verticallyDynamic)
+		) {
+			return false;
+		} else {
+			return spec == 'x' || spec == 'width'
+				? widget.x + widget.width > snappableContainerSize.width || widget.x < 0
+				: widget.y + widget.height > snappableContainerSize.height ||
+						widget.y < 0;
+		}
+	};
 
 	let lastSuggestedSnapp: IPosition & ISize = {
 		x: widget.x,
@@ -85,32 +104,25 @@
 				: roundWidgetSpec('down', 'height')
 	});
 
-	const snappingHint: ISize & IPosition = $derived.by(() => {
-		if (moving) {
-			return {
-				...adjustedPosition({ x: widget.x, y: widget.y }),
-				width: widget.width,
-				height: widget.height
-			};
-		} else if (resizing) {
-			return {
-				...adjustedSize({ width: widget.width, height: widget.height }),
-				x: widget.x,
-				y: widget.y
-			};
-		} else {
-			return {
-				x: widget.x,
-				y: widget.y,
-				width: widget.width,
-				height: widget.height
-			};
-		}
-	});
-
 	let currentWidgetSize: ISize = $state({ width: 0, height: 0 });
 	let editingThisWidget: boolean = $state(false);
 	let cursorWidgetAnchor: IPosition = $state({ x: 0, y: 0 });
+
+	const snappingHint: ISize & IPosition = $derived.by(() => {
+		if (editingThisWidget && moving) {
+			return {
+				...lastSuggestedSnapp,
+				...adjustedPosition({ x: widget.x, y: widget.y })
+			};
+		} else if (editingThisWidget && resizing) {
+			return {
+				...lastSuggestedSnapp,
+				...adjustedSize({ width: widget.width, height: widget.height })
+			};
+		} else {
+			return lastSuggestedSnapp;
+		}
+	});
 
 	const WIDGET = {
 		move: {
@@ -229,10 +241,7 @@
 				onmouseleave={WIDGET.move.handleMouseLeave}
 			></div>
 
-			<div
-				class="move-resize-mask"
-				style:opacity={"1"}
-			>
+			<div class="move-resize-mask" style:opacity={'1'}>
 				{#if useDefaultResizeMask}
 					<MoveResizeMask type={'move'} />
 				{:else}

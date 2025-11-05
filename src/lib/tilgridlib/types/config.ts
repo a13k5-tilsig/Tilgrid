@@ -23,9 +23,6 @@ export interface IContainerConfig {
 	// Should the container stretch horizontally?
 	horizontallyDynamic?: boolean;
 
-	// You custom functions to run after certain events.
-	funcs?: IFuncs;
-
 	// Use the provided moving mask?
 	useDefaultMoveMask?: boolean;
 
@@ -37,6 +34,9 @@ export interface IContainerConfig {
 
 	// Mask the widget content while the widget is resizing.
 	resizingMask?: Snippet;
+
+	// You custom functions to run after certain events.
+	funcs?: IFuncs;
 }
 
 export interface IWidgetConfig

@@ -30,10 +30,9 @@
 		editing: true,
 		snappingArea: 50,
 		verticallyDynamic: true,
-		horizontallyDynamic: true,
-		useDefaultResizeMask: true,
-		useDefaultMoveMask: true,
-		snappingAnimTime: 200,
+		horizontallyDynamic: false,
+		//useDefaultResizeMask: true,
+		//useDefaultMoveMask: true,
 		widgetSpace: 10,
 		funcs: {
 			onWidgetRemove: function (id?: string) {

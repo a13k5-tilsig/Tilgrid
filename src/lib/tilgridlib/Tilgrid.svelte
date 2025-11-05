@@ -9,6 +9,10 @@
 		snappingArea: 50,
 		hints: true,
 		centerSnappableLimit: true,
+		useDefaultResizeMask: false,
+		useDefaultMoveMask: false,
+		verticallyDynamic: false,
+		horizontallyDynamic: false,
 		widgetSpace: 5
 	};
 
@@ -16,6 +20,8 @@
 		containerSize: ISize;
 		widgets: IWidget[];
 		widget: Snippet<[IWidget]>;
+		movingMask?: Snippet;
+		resizingMask?: Snippet;
 		funcs?: IFuncs;
 	}
 
@@ -28,6 +34,8 @@
 		useDefaultMoveMask,
 		useDefaultResizeMask,
 		funcs,
+		verticallyDynamic = DEFAULT.verticallyDynamic,
+		horizontallyDynamic = DEFAULT.horizontallyDynamic,
 		editing = DEFAULT.editing,
 		snappingArea = DEFAULT.snappingArea,
 		hints = DEFAULT.hints,
@@ -80,6 +88,8 @@
 				{editing}
 				{widgetSpace}
 				{funcs}
+				{verticallyDynamic}
+				{horizontallyDynamic}
 				{useDefaultMoveMask}
 				{useDefaultResizeMask}
 				{movingMask}

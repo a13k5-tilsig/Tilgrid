@@ -61,8 +61,8 @@ function fillOccupiedMatrixCells(
 	filler: any = 1
 ): number[][] {
 	let _matrix: number[][] = [...matrix];
-	cellCoordinates.forEach((n: number[]) => {
-		_matrix[n[0]][n[1]] = filler;
+	cellCoordinates.forEach(([y, x]) => {
+		_matrix[y][x] = filler;
 	});
 
 	return _matrix;

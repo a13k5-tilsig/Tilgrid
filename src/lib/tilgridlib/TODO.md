@@ -4,12 +4,13 @@
 - [x] Mask on resize or movement. In case some widgets laggs a bit on resizing due to computation, give the option to mask the widget until it's placed again.
 - [x] Better styling and styling configuration options (var's).
 
+- [ ] Add vertical stretchability, for new and moving widgets.
+    - [ ] Vertical scaling on hovering outside of bounds.
+
 - [ ] Add "Partial shifting"; don't let widgets overlap, keep the previous position until a new (valid) one is found.
 
 - [ ] Add some delay before snapp-hint disappears when widget snapps back.
 
-- [ ] Add vertical stretchability, for new and moving widgets.
-    - [ ] Vertical scaling on hovering outside of bounds.
 - [ ] Add fit-snappable-width-to-widgets-width when scaling the container window. To avoid widgets from being out-of-bounds of the container.
     - [ ] Add self-adjustment on out-of-bounds after container resize.
 - [ ] Horizontal pixel-chunk-shrink-&-grow.

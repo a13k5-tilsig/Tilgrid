@@ -17,6 +17,12 @@ export interface IContainerConfig {
 	// How much space to add between each widget (widget-wrapper padding) (px)?
 	widgetSpace?: number;
 
+	// Should the container stretch vertically?
+	verticallyDynamic?: boolean;
+
+	// Should the container stretch horizontally?
+	horizontallyDynamic?: boolean;
+
 	// You custom functions to run after certain events.
 	funcs?: IFuncs;
 

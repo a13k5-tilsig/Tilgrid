@@ -76,7 +76,7 @@ function fillOccupiedMatrixCells(
  * @param matrixCellSize - The size of a cell in the relevant matrix.
  * @returns \[\[X, Y\], \[X, Y\]\]
  */
-function getMatrixCellCoordinatesFromWidgets(
+export function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
 	matrixCellSize: number
 ): number[][] {

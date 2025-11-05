@@ -338,8 +338,8 @@
 		background-color: var(--delete-button-init-bg, pink);
 		top: 0;
 		right: 0;
-		width: 20px;
-		height: 20px;
+		width: var(--delete-button-size, 25px);
+		aspect-ratio: 1 / 1;
 		padding: 0;
 		border: 2px solid var(--widget-editing-border-color, lightgray);
 		border-radius: var(--delete-button-border-radius, 10px);

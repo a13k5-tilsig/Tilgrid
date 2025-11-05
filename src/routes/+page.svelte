@@ -29,6 +29,8 @@
 	const config: IContainerConfig = $state({
 		editing: true,
 		snappingArea: 50,
+		verticallyDynamic: true,
+		horizontallyDynamic: true,
 		useDefaultResizeMask: true,
 		useDefaultMoveMask: true,
 		snappingAnimTime: 200,

@@ -107,6 +107,7 @@
 		--widget-editing-border-color: lightgray;
 		--widget-editing-border-radius: 10px 10px 3px 10px;
 
+		--delete-button-size: 25px;
 		--delete-button-border-radius: 6px;
 		--delete-button-init-bg: pink;
 		--delete-button-hover-bg: red;

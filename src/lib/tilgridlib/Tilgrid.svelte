@@ -1,17 +1,17 @@
 <script lang="ts">
-	import type { IContainerConfig } from './types/config.ts';
-	import type { IWidget, ISize, IFuncs } from './types/widget';
 	import type { Snippet } from 'svelte';
+	import type { IContainerConfig } from './types/config';
+	import type { IWidget, ISize, IFuncs } from './types/widget';
 	import Widget from './Widget.svelte';
 
 	const DEFAULT: IContainerConfig = {
-		width: '100%',
-		height: '100%',
 		editing: true,
 		snappingArea: 50,
-		snappingAnimTime: 200,
-		horizontallyDynamic: true,
-		widgetSpace: 5
+		hints: true,
+		centerSnappableLimit: true,
+		widgetSpace: 5,
+		useDefaultMoveMask: false,
+		useDefaultResizeMask: false,
 	};
 
 	interface Props extends IContainerConfig {
@@ -25,19 +25,16 @@
 		containerSize = $bindable(),
 		widgets = $bindable(),
 		widget,
-		width = DEFAULT.width,
-		height = DEFAULT.height,
+		movingMask,
+		resizingMask,
+		useDefaultMoveMask,
+		useDefaultResizeMask,
+		funcs,
 		editing = DEFAULT.editing,
 		snappingArea = DEFAULT.snappingArea,
-		snappingAnimTime = DEFAULT.snappingAnimTime,
-		// Scales widgets horizontaly to fit the container.
-		horizontallyDynamic = DEFAULT.horizontallyDynamic,
-		// Scales the CONTAINER vertically to fit moving and new widgets.
-		//verticallyDynamic = DEFAULT.verticallyDynamic,
-		// Wrap icons to fit in the container, this requires the vertical axis to be dynamic.
-		//wrapWidgets = false,
-		widgetSpace = DEFAULT.widgetSpace,
-		funcs
+		hints = DEFAULT.hints,
+		centerSnappableLimit = DEFAULT.centerSnappableLimit,
+		widgetSpace = DEFAULT.widgetSpace
 	}: Props = $props();
 
 	let moving: boolean = $state(false);
@@ -48,8 +45,6 @@
 	);
 
 	const SNAPP_HINT_OVERFLOW_COMPANSATION = 2;
-
-	// FIX: snapping container sometimes not centering inside parent.
 
 	const crimpedContainerSize: ISize = $derived({
 		width:
@@ -62,33 +57,35 @@
 
 <div
 	id="container-wrapper"
+	class:center={centerSnappableLimit}
 	bind:clientWidth={containerSize.width}
 	bind:clientHeight={containerSize.height}
-	style:width
-	style:height
 >
 	<div
 		id="container-snappable-limit"
-		class:snapp-hints={editing || moving || resizing}
+		class:snapp-hints={hints && (editing || moving || resizing)}
 		style:width="{crimpedContainerSize.width}px"
 		style:height="{crimpedContainerSize.height}px"
 		style="
 			--snapping-area: {snappingArea}px;
-			--snapping-anim-time: {snappingAnimTime}ms;
 			--fix-snapping-grid-elignment: {fixSnappingGridAlignment}px;
 		"
 	>
 		{#each widgets as w, i (w.id)}
 			<Widget
+				bind:widgets
 				bind:widget={widgets[i]}
 				bind:moving
 				bind:resizing
 				{containerSize}
 				{snappingArea}
-				{snappingAnimTime}
 				{editing}
 				{widgetSpace}
 				{funcs}
+				{useDefaultMoveMask}
+				{useDefaultResizeMask}
+				{movingMask}
+				{resizingMask}
 			>
 				{@render widget?.(w)}
 			</Widget>
@@ -97,21 +94,53 @@
 </div>
 
 <style>
+	/*
+	:global(:root) {
+		--container-bg: unset;
+		--container-width: 100%;
+		--container-height: 100%;
+		
+		--snappable-container-bg: unset;
+		--snappable-container-hints: black;
+		--snapping-anim-time: 200ms;
+		--snapping-hint-bg: gray;
+
+		--widget-border-radius: 3px;
+		--widget-editing-border-color: lightgray;
+		--widget-editing-border-radius: 10px 10px 3px 10px;
+
+		--delete-button-size: 30px;
+		--delete-button-border-radius: 6px;
+		--delete-button-init-bg: pink;
+		--delete-button-hover-bg: red;
+	}
+	*/
+
 	#container-wrapper {
+		width: var(--container-width, 100%);
+		height: var(--container-height, 100%);
+		background-color: var(--container-bg, unset);
 		position: relative;
-		display: flex;
-		justify-content: center;
-		align-items: center;
 		border: 1px solid transparent;
 	}
 
 	#container-snappable-limit {
 		border: 1px solid transparent;
-		transition: width var(--snapping-anim-time) ease-in-out;
+		transition: width var(--snapping-anim-time, 200ms) ease-in-out;
+		background-color: var(--snappable-container-bg, unset);
+	}
+
+	.center {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 
 	.snapp-hints {
-		background-image: radial-gradient(black 1px, transparent 0);
+		background-image: radial-gradient(
+			var(--snappable-container-hints, black) 1px,
+			transparent 0
+		);
 		background-size: var(--snapping-area) var(--snapping-area);
 		background-position: var(--fix-snapping-grid-elignment)
 			var(--fix-snapping-grid-elignment);

@@ -2,36 +2,48 @@ import type { IWidget, ISize, IFuncs } from './widget';
 import type { Snippet } from 'svelte';
 
 export interface IContainerConfig {
-	// CSS width (default: 100%).
-	width?: string;
-
-	// CSS height (default: 100%).
-	height?: string;
-
 	// Is the container in 'editing' mode?
 	editing?: boolean;
 
 	// The matrix grid-cell size, wich will be used for aligning the widgets (px).
 	snappingArea?: number;
 
-	// The time a 'snapping' transition-animation will take (ms).
-	snappingAnimTime?: number;
+	// Should dots show at snappable areas?
+	hints?: boolean;
 
-	// Should the container dynamically resize its children when the
-	// container shirinks / grows horizontally (i.e window-resizing)?
-	horizontallyDynamic?: boolean;
+	// Should the container where the widgets are snappable be centered in the main container?
+	centerSnappableLimit?: boolean;
 
 	// How much space to add between each widget (widget-wrapper padding) (px)?
 	widgetSpace?: number;
 
 	// You custom functions to run after certain events.
 	funcs?: IFuncs;
+
+	// Use the provided moving mask?
+	useDefaultMoveMask?: boolean;
+
+	// Use the provided resizing mask?
+	useDefaultResizeMask?: boolean;
+
+	// Mask the widget content while the widget is moving.
+	movingMask?: Snippet;
+
+	// Mask the widget content while the widget is resizing.
+	resizingMask?: Snippet;
 }
 
 export interface IWidgetConfig
 	extends Pick<
 		IContainerConfig,
-		'snappingArea' | 'snappingAnimTime' | 'editing' | 'widgetSpace' | 'funcs'
+		| 'snappingArea'
+		| 'editing'
+		| 'widgetSpace'
+		| 'funcs'
+		| 'movingMask'
+		| 'resizingMask'
+		| 'useDefaultMoveMask'
+		| 'useDefaultResizeMask'
 	> {
 	// The id, position (x, y) and size (w, h) of a single widget.
 	widget: IWidget;

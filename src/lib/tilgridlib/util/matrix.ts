@@ -1,32 +1,16 @@
-import type { IPosition, ISize, IWidget } from '../types/widget.ts';
+import type { IPosition, ISize, IWidget, ISpec } from '../types/widget';
 
-/**
- * Round a number up or down against another number
- * based on whats closer.
- *
- * @param num - The number to round.
- * @param round - The number to be rounded against.
- * @returns The closest rounded number.
- * @example
- * ```typescript
- * const result = roundToClosest(122, 5);
- * console.log(result); // 120;
- * ```
- */
-export function roundToClosest(num: number, round: number) {
-	return num % round > round / 2
-		? Math.ceil(num / round) * round
-		: Math.floor(num / round) * round;
-}
-
-/**
+/*
  * Convert a given amount of pixels into its value in matrix cells.
  *
  * @param pixels - How many pixels to convert.
  * @param matrixBlockSize - The size (in pixels) of a matrix cell.
  * @returns (floored(pixels / matrixCellSize)).
  */
-function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
+export function fromPxToMatrixCells(
+	pixels: number,
+	matrixCellSize: number
+): number {
 	return Math.floor(pixels / matrixCellSize);
 }
 
@@ -37,18 +21,21 @@ function fromPxToMatrixCells(pixels: number, matrixCellSize: number): number {
  * @param matrixCellSize - The size (in pixels) of a matrix cell.
  * @returns (cells * matrixCellSize).
  */
-function fromMatrixCellsToPx(cells: number, matrixCellSize: number): number {
+export function fromMatrixCellsToPx(
+	cells: number,
+	matrixCellSize: number
+): number {
 	return cells * matrixCellSize;
 }
 
 /**
- * Returns a 2D matrix with cells containing zeroes matching the given dimensions.
+ * Returns a matrix with cells containing zeroes matching the given dimensions.
  *
  * @param rows - Amount of rows (vertical cells).
  * @param columns - Amount of collumns (horizontal cells).
  * @returns \[\[some, amount, of, zeroes\], \[some, amount, of, zeroes\], ...\]
  */
-function makeMatrix(rows: number, columns: number): number[][] {
+export function makeMatrix(rows: number, columns: number): number[][] {
 	let _rows: number[][] = [];
 	for (let row = 0; row < rows; row++) {
 		let _columns: number[] = [];
@@ -57,11 +44,12 @@ function makeMatrix(rows: number, columns: number): number[][] {
 		}
 		_rows.push(_columns);
 	}
+
 	return _rows;
 }
 
 /**
- * Places a "1" in occupied matrix cells.
+ * Places a given value, or "1" (if unset) in occupied matrix cells.
  *
  * @param matrix - A 2D array representing rows and columns.
  * @param items - A 2D array where index\[0\] represents a row and index\[1\] represents a column.
@@ -70,12 +58,13 @@ function makeMatrix(rows: number, columns: number): number[][] {
 function fillOccupiedMatrixCells(
 	matrix: number[][],
 	cellCoordinates: any[][],
+	filler: any = 1
 ): number[][] {
-	const filler = 1;
 	let _matrix: number[][] = [...matrix];
-	cellCoordinates.forEach((i: number[]) => {
-		_matrix[i[0]][i[1]] = filler;
+	cellCoordinates.forEach((n: number[]) => {
+		_matrix[n[0]][n[1]] = filler;
 	});
+
 	return _matrix;
 }
 
@@ -89,7 +78,7 @@ function fillOccupiedMatrixCells(
  */
 function getMatrixCellCoordinatesFromWidgets(
 	widgets: IWidget[],
-	matrixCellSize: number,
+	matrixCellSize: number
 ): number[][] {
 	let occupiedMatrixCells: number[][] = [];
 	widgets.forEach((w: IWidget) => {
@@ -102,13 +91,45 @@ function getMatrixCellCoordinatesFromWidgets(
 			for (let w = 0; w < widgetMatrixCellWidth; w++) {
 				occupiedMatrixCells.push([
 					widgetMatrixPositionFromTop + h,
-					widgetMatrixPositionFromLeft + w,
+					widgetMatrixPositionFromLeft + w
 				]);
 			}
 		}
 	});
+
 	return occupiedMatrixCells;
 }
+
+export function isCollidingWithOtherWidget(
+	widget: IWidget,
+	widgets: IWidget[],
+	matrixCellSize: number, 
+	spec: ISpec,
+) {
+	const _widgets = [...widgets];
+
+	// remove the moving widget from the match, to avoid matching with self.
+	const indexOfWidget = _widgets.findIndex((w) => w.id === widget.id);
+	_widgets.splice(indexOfWidget, 1);
+
+	const withNewSpec: IWidget = { ...widget, ...spec };
+
+	const otherOccupied = getMatrixCellCoordinatesFromWidgets(_widgets, matrixCellSize);
+	const widgetOccupied = getMatrixCellCoordinatesFromWidgets([withNewSpec], matrixCellSize);
+
+	for (let i = 0; i < widgetOccupied.length; i++) {
+		const iy = widgetOccupied[i][0];
+		const ix = widgetOccupied[i][1];
+		for (let j = 0; j < otherOccupied.length; j++) {
+			const jy = otherOccupied[j][0];
+			const jx = otherOccupied[j][1];
+			if (iy === jy && ix === jx) return true;
+		}
+	}
+
+	return false;
+}
+
 
 /**
  *
@@ -131,16 +152,16 @@ export function findAvailablePosition(
 	containerSize: ISize,
 	widgetSize: ISize,
 	snappingArea: number,
-	widgets: IWidget[],
+	widgets: IWidget[]
 ): IPosition {
 	const containerMatrix = makeMatrix(
 		fromPxToMatrixCells(containerSize.height, snappingArea),
-		fromPxToMatrixCells(containerSize.width, snappingArea),
+		fromPxToMatrixCells(containerSize.width, snappingArea)
 	);
 
 	const widgetMatrix = makeMatrix(
 		fromPxToMatrixCells(widgetSize.height, snappingArea),
-		fromPxToMatrixCells(widgetSize.width, snappingArea),
+		fromPxToMatrixCells(widgetSize.width, snappingArea)
 	);
 
 	// To be used for finding matching matrix in the container matrix.
@@ -148,12 +169,12 @@ export function findAvailablePosition(
 
 	const occupiedMatrixCellCoordinates = getMatrixCellCoordinatesFromWidgets(
 		widgets,
-		snappingArea,
+		snappingArea
 	);
 
 	const filledMatrix = fillOccupiedMatrixCells(
 		containerMatrix,
-		occupiedMatrixCellCoordinates,
+		occupiedMatrixCellCoordinates
 	);
 
 	const windowHeight = widgetMatrix.length;
@@ -175,7 +196,7 @@ export function findAvailablePosition(
 			if (JSON.stringify(window) === widgetMatrixStringified) {
 				return {
 					x: fromMatrixCellsToPx(tw, snappingArea),
-					y: fromMatrixCellsToPx(th, snappingArea),
+					y: fromMatrixCellsToPx(th, snappingArea)
 				};
 			}
 		}

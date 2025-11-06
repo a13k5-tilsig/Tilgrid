@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { IContainerConfig } from '$lib/tilgridlib/types/config';
 	import type { ISize, IWidget } from '$lib/tilgridlib/types/widget';
-	import { findAvailablePosition } from '$lib/tilgridlib/util/widget';
+	import type { IContainerConfig } from '$lib/tilgridlib/types/config';
+	import { findAvailablePosition } from '$lib/tilgridlib/util/matrix';
 	import Tilgrid from '$lib/tilgridlib/Tilgrid.svelte';
 	import WidgetTestContent from '$lib/components/WidgetTestContent.svelte';
 
@@ -27,12 +27,10 @@
 	]);
 
 	const config: IContainerConfig = $state({
-		width: '100%',
-		height: '100%',
 		editing: true,
 		snappingArea: 50,
-		snappingAnimTime: 200,
-		horizontallyDynamic: false,
+		useDefaultResizeMask: true,
+		useDefaultMoveMask: true,
 		widgetSpace: 10,
 		funcs: {
 			onWidgetRemove: function (id?: string) {
@@ -73,6 +71,9 @@
 </div>
 
 <style>
+	:global(:root) {
+		--snapping-anim-time: 100ms;
+	}
 	:global(html, body) {
 		margin: 0;
 		padding: 0;

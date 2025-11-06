@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IWidget } from '../tilgridlib/types/widget.ts';
+	import type { IWidget } from '../tilgridlib/types/widget';
 
 	interface Props {
 		widget: IWidget;

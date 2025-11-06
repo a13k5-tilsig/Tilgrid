@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IWidget } from './types/widget';
+	import type { IWidget } from '../types/widget';
 
 	let { id, width, height, x, y }: IWidget = $props();
 </script>
